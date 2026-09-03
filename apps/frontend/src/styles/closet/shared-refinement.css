@@ -1,0 +1,566 @@
+/* Neutral premium workspace refinement */
+:root,
+.sardrobe-light,
+[data-theme='light'] {
+  --palette-50: #f8f8f5;
+  --palette-200: #dedbd3;
+  --palette-400: #8a8780;
+  --palette-500: #45433d;
+  --palette-700: #292823;
+  --palette-950: #171613;
+  --palette-contrast: #ffffff;
+  --sardrobe-primary-seed: #45433d;
+  --sardrobe-neutral-seed: #86837c;
+  --sardrobe-success-seed: #66745c;
+  --sardrobe-warning-seed: #a67f54;
+  --sardrobe-font-family:
+    'Aptos', 'Segoe UI Variable', 'SF Pro Text', 'Helvetica Neue', Arial, system-ui, sans-serif;
+  --sardrobe-font-family-heading:
+    'Bodoni 72', Didot, 'Iowan Old Style', Georgia, 'Times New Roman', serif;
+  --sardrobe-font-family-data:
+    'Aptos Display', 'Segoe UI Variable Display', 'SF Pro Display', 'Avenir Next', system-ui, sans-serif;
+  --sardrobe-border-width: 0.5px;
+  --sardrobe-focus-width: 1.5px;
+  --sardrobe-focus-offset: 3px;
+  --sardrobe-line-height: 1.5;
+  --landing-background: #f6f6f4;
+  --landing-surface: #ffffff;
+  --landing-surface-strong: #ebeae6;
+  --landing-ink: #24231f;
+  --landing-muted: #66635d;
+  --landing-line: rgb(36 35 31 / 0.11);
+  --landing-shadow: rgb(36 35 31 / 0.07);
+  --landing-accent: var(--sardrobe-primary-fill-mid);
+  --landing-accent-hover: var(--sardrobe-primary-fill-loud);
+  --landing-glow: rgb(255 255 255 / 0.42);
+  --landing-button-text: #ffffff;
+  --site-scrollbar-thumb: color-mix(in oklab, var(--landing-muted), black 12%);
+  --site-scrollbar-thumb-hover: color-mix(in oklab, var(--landing-ink), var(--landing-muted) 45%);
+}
+
+.sardrobe-dark,
+[data-theme='dark'] {
+  --sardrobe-primary-seed: #9fa487;
+  --sardrobe-neutral-seed: #aaa294;
+  --sardrobe-success-seed: #98a887;
+  --sardrobe-warning-seed: #c6a06d;
+  --sardrobe-font-family:
+    'Aptos', 'Segoe UI Variable', 'SF Pro Text', 'Helvetica Neue', Arial, system-ui, sans-serif;
+  --sardrobe-font-family-heading:
+    'Bodoni 72', Didot, 'Iowan Old Style', Georgia, 'Times New Roman', serif;
+  --sardrobe-font-family-data:
+    'Aptos Display', 'Segoe UI Variable Display', 'SF Pro Display', 'Avenir Next', system-ui, sans-serif;
+  --landing-background: #171613;
+  --landing-surface: #22211d;
+  --landing-surface-strong: #2d2a24;
+  --landing-ink: #f4efe6;
+  --landing-muted: #c9c0b2;
+  --landing-line: rgb(244 239 230 / 0.14);
+  --landing-shadow: rgb(0 0 0 / 0.18);
+  --landing-accent: var(--sardrobe-primary-fill-mid);
+  --landing-accent-hover: var(--sardrobe-primary-fill-loud);
+  --landing-glow: rgb(244 239 230 / 0.08);
+  --landing-button-text: #171613;
+}
+
+body {
+  font-family: var(--sardrobe-font-family);
+  font-feature-settings: 'kern' 1, 'liga' 1;
+  letter-spacing: 0;
+}
+
+.site-body {
+  background: var(--landing-background);
+}
+
+.site-logo,
+.section-heading__title,
+.closing__title,
+.app-shell__title,
+.app-panel__title,
+.closet-sidebar__brand a,
+.closet-mobile-header a,
+.closet-library h1,
+.closet-imports h1,
+.closet-outfits h1,
+.closet-draft-editor h2,
+.closet-dialog__title,
+.closet-detail-drawer__title,
+.closet-filters-drawer__title,
+.closet-builder__title {
+  font-family: var(--sardrobe-font-family-heading);
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.site-user-menu__email,
+.app-panel__label,
+.app-panel__details dt,
+.closet-library__count,
+.closet-outfits__count,
+.closet-group__header span,
+.closet-dialog__meta,
+.closet-field > span,
+.closet-draft-card__meta,
+.closet-process-status__label,
+.closet-process-status__summary,
+.closet-nav-item,
+.closet-mobile-nav__item {
+  font-family: var(--sardrobe-font-family-data);
+  font-variant-numeric: tabular-nums;
+  font-stretch: 108%;
+  letter-spacing: 0;
+}
+
+.closet-workspace,
+.closet-dialog,
+.closet-detail-drawer,
+.closet-builder-dialog,
+.closet-builder-drawer,
+.closet-filters-drawer {
+  --closet-accent: var(--sardrobe-primary-fill-mid);
+  --closet-hairline: 0.5px;
+  --closet-panel-flat: #f6f6f4;
+  --closet-panel: #fafafa;
+  --closet-panel-strong: #ffffff;
+  --closet-card-flat: #ffffff;
+  --closet-card-footer: #fafafa;
+  --closet-sidebar-flat: #ffffff;
+  --closet-sidebar-text: var(--landing-ink);
+  --closet-sidebar-muted: color-mix(in oklab, var(--landing-muted), transparent 4%);
+  --closet-sidebar-line: rgb(36 35 31 / 0.11);
+  --closet-ink-strong: var(--landing-ink);
+  --closet-ink-muted: var(--landing-muted);
+  --closet-rule: rgb(36 35 31 / 0.12);
+  --closet-rule-strong: rgb(36 35 31 / 0.17);
+  --closet-button-outline: rgb(36 35 31 / 0.11);
+  --closet-button-outline-hover: rgb(36 35 31 / 0.18);
+  --closet-focus: 0 0 0 2px rgb(255 255 255 / 0.9), 0 0 0 4px var(--closet-ink-strong);
+  --closet-raised-shadow: none;
+  --closet-transition-duration: 360ms;
+  --closet-transition-easing: cubic-bezier(0.22, 1, 0.36, 1);
+  color: var(--landing-ink);
+}
+
+.closet-workspace {
+  background: var(--closet-panel-flat);
+}
+
+.closet-panel {
+  background: var(--closet-sidebar-flat);
+}
+
+.closet-editable-title {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-inline-size: 0;
+}
+
+.closet-editable-title--editing {
+  display: block;
+  inline-size: min(80%, 72rem);
+  max-inline-size: 100%;
+}
+
+.closet-editable-title__text {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.closet-editable-title__button.button {
+  flex: 0 0 auto;
+  inline-size: 2rem;
+  min-block-size: 2rem;
+  border-color: transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--closet-ink-muted);
+}
+
+.closet-editable-title__button.button:hover:not([data-disabled]) {
+  border-color: transparent;
+  background: transparent;
+  color: var(--closet-ink-strong);
+}
+
+.closet-editable-title__field {
+  inline-size: 100%;
+  max-inline-size: 100%;
+  min-inline-size: 0;
+}
+
+.closet-editable-title__input.field__control {
+  box-sizing: border-box;
+  inline-size: 100%;
+  max-inline-size: 100%;
+  block-size: 2.55rem;
+  padding-block: 0.3rem;
+  padding-inline: 0.52rem;
+  color: var(--landing-ink);
+  font-family: var(--sardrobe-font-family-heading);
+  font-size: 1.45rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.15;
+}
+
+.closet-dialog__topbar > div,
+.closet-detail-drawer__topbar > div,
+.closet-builder__topbar > div,
+.closet-draft-editor__header > div {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+}
+
+.closet-icon,
+.closet-workspace svg,
+.closet-dialog svg,
+.closet-detail-drawer svg {
+  stroke-width: 1.15;
+}
+
+.closet-sidebar,
+.closet-mobile-nav,
+.closet-mobile-header,
+.closet-detail-drawer,
+.closet-dialog.dialog__popup,
+.closet-filters-drawer {
+  backdrop-filter: blur(22px) saturate(135%);
+  -webkit-backdrop-filter: blur(22px) saturate(135%);
+}
+
+.closet-sidebar {
+  margin: 0.75rem 0 0.75rem 0.75rem;
+  min-block-size: calc(100dvh - 1.5rem);
+  border: var(--closet-hairline) solid var(--closet-sidebar-line);
+  border-radius: var(--sardrobe-border-radius-xl);
+  background: var(--closet-sidebar-flat);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.48);
+}
+
+.closet-sidebar__brand,
+.closet-sidebar__account {
+  border-color: var(--closet-sidebar-line);
+}
+
+.closet-sidebar__brand a {
+  font-size: 1.62rem;
+}
+
+.closet-sidebar__brand button,
+.closet-mobile-header button,
+.closet-detail-drawer__close,
+.closet-filters-drawer__close {
+  border: var(--closet-hairline) solid var(--closet-rule);
+  background: rgb(255 255 255 / 0.42);
+  color: var(--landing-ink);
+  transition:
+    background-color var(--closet-transition-duration) var(--closet-transition-easing),
+    border-color var(--closet-transition-duration) var(--closet-transition-easing),
+    color var(--closet-transition-duration) var(--closet-transition-easing),
+    transform var(--closet-transition-duration) var(--closet-transition-easing);
+}
+
+.closet-sidebar__brand button:hover:not(:disabled),
+.closet-mobile-header button:hover:not(:disabled),
+.closet-detail-drawer__close:hover,
+.closet-filters-drawer__close:hover {
+  background: rgb(255 255 255 / 0.68);
+  border-color: var(--closet-rule-strong);
+}
+
+.closet-sidebar__nav {
+  gap: 0.28rem;
+}
+
+.closet-nav-item,
+.closet-mobile-nav__item {
+  color: var(--landing-ink);
+  font-weight: 520;
+  transition:
+    background-color var(--closet-transition-duration) var(--closet-transition-easing),
+    border-color var(--closet-transition-duration) var(--closet-transition-easing),
+    color var(--closet-transition-duration) var(--closet-transition-easing),
+    transform var(--closet-transition-duration) var(--closet-transition-easing);
+}
+
+.closet-nav-item--active,
+.closet-mobile-nav__item--active {
+  background: rgb(36 35 31 / 0.075);
+  color: var(--landing-ink);
+}
+
+.closet-nav-item:hover:not(:disabled),
+.closet-mobile-nav__item:hover:not(:disabled) {
+  background: rgb(36 35 31 / 0.052);
+}
+
+.closet-nav-item:disabled,
+.closet-mobile-nav__item:disabled {
+  color: color-mix(in oklab, var(--landing-muted), transparent 20%);
+}
+
+.closet-sidebar__account .site-user-menu__trigger,
+.closet-sidebar__account .site-user-menu__row,
+.closet-sidebar__account .site-user-menu__name {
+  color: var(--landing-ink);
+}
+
+.closet-sidebar__account .site-user-menu__email {
+  color: var(--landing-muted);
+}
+
+.closet-sidebar__account .site-user-menu__trigger:hover:not([data-disabled]),
+.closet-sidebar__account .site-user-menu__trigger[data-popup-open] {
+  background: rgb(36 35 31 / 0.052);
+}
+
+.closet-filters-drawer .closet-field > span {
+  font-weight: 460;
+}
+
+.closet-filters-drawer__section-label {
+  font-family: var(--sardrobe-font-family-data);
+  font-stretch: 108%;
+  font-weight: 520;
+  letter-spacing: 0;
+}
+
+.closet-filters-drawer__actions .button {
+  font-weight: 520;
+}
+
+.closet-library,
+.closet-import-view,
+.closet-outfits-view {
+  background: transparent;
+}
+
+.closet-library__count {
+  font-weight: 400;
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+.closet-group__header h2 {
+  font-family: var(--sardrobe-font-family-heading);
+  font-size: 1.15rem;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.closet-group__header {
+  border-block-end: var(--closet-hairline) solid var(--closet-rule);
+}
+
+.closet-search .input,
+.closet-field select,
+.closet-field textarea,
+.closet-multiselect__trigger,
+.closet-library__actions .button,
+.button {
+  border-width: var(--closet-hairline);
+  border-color: var(--closet-rule);
+  border-radius: var(--sardrobe-border-radius-lg);
+  background: rgb(255 255 255 / 0.72);
+  color: var(--landing-ink);
+  box-shadow: none;
+  transition:
+    background-color var(--closet-transition-duration) var(--closet-transition-easing),
+    border-color var(--closet-transition-duration) var(--closet-transition-easing),
+    color var(--closet-transition-duration) var(--closet-transition-easing),
+    box-shadow var(--closet-transition-duration) var(--closet-transition-easing),
+    transform var(--closet-transition-duration) var(--closet-transition-easing);
+}
+
+.button--normal.button--primary {
+  background: var(--sardrobe-primary-fill-mid);
+  border-color: color-mix(in oklab, var(--sardrobe-primary-fill-mid), black 14%);
+  color: var(--landing-button-text);
+}
+
+.button--normal.button--primary:hover:not([data-disabled]) {
+  background: color-mix(in oklab, var(--sardrobe-primary-fill-mid), black 6%);
+  border-color: color-mix(in oklab, var(--sardrobe-primary-fill-mid), black 22%);
+}
+
+.button.button--outline {
+  border: 1px solid var(--closet-button-outline);
+  background: rgb(255 255 255 / 0.72);
+  color: var(--landing-ink);
+}
+
+.button.button--outline.button--destructive {
+  border-color: var(--closet-button-outline);
+  color: var(--landing-ink);
+}
+
+.button.button--outline:hover:not([data-disabled]) {
+  background: rgb(255 255 255 / 0.92);
+  border-color: var(--closet-button-outline-hover);
+}
+
+.button--outline.button--neutral:hover:not([data-disabled]),
+.closet-library__actions .button:hover:not([data-disabled]),
+.closet-search .input:hover,
+.closet-field select:hover,
+.closet-field textarea:hover,
+.closet-multiselect__trigger:hover:not([data-disabled]) {
+  background: rgb(255 255 255 / 0.92);
+  border-color: var(--closet-rule-strong);
+}
+
+.wardrobe-select__positioner,
+.closet-filters-drawer__select-positioner,
+.closet-multiselect__positioner {
+  z-index: 80;
+}
+
+.wardrobe-select__positioner .select__popup {
+  inline-size: var(--anchor-width);
+  max-inline-size: min(var(--available-width, 100vw), 22rem);
+  max-block-size: min(var(--available-height, 18rem), 18rem);
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.closet-details,
+.closet-process-status,
+.closet-draft-filter,
+.closet-draft-card,
+.closet-item-card,
+.closet-preview img,
+.closet-preview > span,
+.closet-draft-editor__result,
+.closet-draft-editor__empty,
+.closet-empty,
+.closet-dialog.dialog__popup,
+.closet-detail-drawer {
+  border-width: var(--closet-hairline);
+  border-color: var(--closet-rule);
+  background: var(--closet-card-flat);
+  box-shadow: none;
+}
+
+.closet-details,
+.closet-dialog.dialog__popup,
+.closet-detail-drawer {
+  background: var(--closet-card-flat);
+}
+
+.closet-item-card,
+.closet-draft-card {
+  transition:
+    background-color var(--closet-transition-duration) var(--closet-transition-easing),
+    border-color var(--closet-transition-duration) var(--closet-transition-easing),
+    transform var(--closet-transition-duration) var(--closet-transition-easing);
+}
+
+.closet-item-card:hover,
+.closet-draft-card:hover {
+  background: rgb(255 255 255 / 0.95);
+  border-color: color-mix(in oklab, var(--closet-ink-strong), transparent 55%);
+  box-shadow: 0 0.35rem 0.85rem rgb(36 35 31 / 0.08);
+  transform: translateY(-1px);
+}
+
+.closet-item-card__media,
+.closet-draft-card__media,
+.closet-dialog__media,
+.closet-detail-drawer .closet-dialog__media {
+  border-color: var(--closet-rule);
+}
+
+.closet-item-card__copy,
+.closet-draft-card__body {
+  background: color-mix(in oklab, var(--closet-card-flat), var(--closet-panel-flat) 20%);
+}
+
+.closet-item-card__name,
+.closet-draft-card__name {
+  font-family: var(--sardrobe-font-family-data);
+  font-size: 0.74rem;
+  font-weight: 560;
+  letter-spacing: 0;
+}
+
+.closet-draft-filter {
+  font-weight: 540;
+  transition:
+    background-color var(--closet-transition-duration) var(--closet-transition-easing),
+    border-color var(--closet-transition-duration) var(--closet-transition-easing),
+    color var(--closet-transition-duration) var(--closet-transition-easing);
+}
+
+.closet-draft-filter--active {
+  background: color-mix(in oklab, var(--sardrobe-primary-fill-mid), white 8%);
+  border-color: color-mix(in oklab, var(--sardrobe-primary-fill-mid), black 10%);
+}
+
+.closet-dialog__topbar,
+.closet-detail-drawer__topbar {
+  border-color: var(--closet-rule);
+  background: rgb(255 255 255 / 0.54);
+}
+
+.closet-delete-confirm {
+  border-width: var(--closet-hairline);
+  box-shadow: none;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .closet-sidebar,
+  .closet-mobile-nav,
+  .closet-mobile-header,
+  .closet-detail-drawer,
+  .closet-dialog.dialog__popup,
+  .closet-filters-drawer {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: var(--landing-surface);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button,
+  .closet-sidebar__brand button,
+  .closet-mobile-header button,
+  .closet-detail-drawer__close,
+  .closet-filters-drawer__close,
+  .closet-nav-item,
+  .closet-mobile-nav__item,
+  .closet-item-card,
+  .closet-draft-card,
+  .closet-draft-filter,
+  .closet-search .input,
+  .closet-field select,
+  .closet-field textarea,
+  .closet-multiselect__trigger {
+    transition-duration: 1ms;
+  }
+}
+
+@media (max-width: 62rem) {
+  .closet-mobile-header,
+  .closet-mobile-nav {
+    background: var(--closet-sidebar-flat);
+    color: var(--landing-ink);
+    border-color: var(--closet-rule);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.42);
+  }
+
+  .closet-mobile-nav {
+    border-block-start: var(--closet-hairline) solid var(--closet-rule);
+  }
+}
+
+@media (max-width: 42rem) {
+  .closet-editable-title--editing {
+    inline-size: 100%;
+  }
+}
+
+/* ===== Outfits (Phase 4) ===== */

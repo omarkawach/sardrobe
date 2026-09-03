@@ -1,0 +1,82 @@
+html {
+  scroll-behavior: smooth;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: var(--site-scrollbar-thumb) var(--site-scrollbar-track);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--site-scrollbar-thumb) var(--site-scrollbar-track);
+}
+
+*::-webkit-scrollbar {
+  inline-size: var(--site-scrollbar-size);
+  block-size: var(--site-scrollbar-size);
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--site-scrollbar-track);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--site-scrollbar-thumb);
+  border: 2px solid var(--site-scrollbar-track);
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--site-scrollbar-thumb-hover);
+}
+
+*::-webkit-scrollbar-corner {
+  background: var(--site-scrollbar-track);
+}
+
+body {
+  margin: 0;
+}
+
+.site-body {
+  min-block-size: 100vh;
+  color: var(--landing-ink);
+  --site-scrollbar-track: var(--landing-background);
+  background: var(--landing-background);
+}
+
+.skip-link {
+  position: absolute;
+  inset: 0 auto auto 1rem;
+  transform: translateY(-140%);
+  padding: 0.75rem 1rem;
+  border-radius: 0 0 0.8rem 0.8rem;
+  background: var(--landing-accent);
+  color: var(--landing-button-text);
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform 160ms ease;
+}
+
+.skip-link:focus,
+.skip-link:focus-visible {
+  z-index: 1000;
+  transform: translateY(0);
+}
+
+:where(a, button, summary):focus-visible {
+  outline: var(--sardrobe-focus-ring);
+  outline-offset: 4px;
+}
+
+.auth-action {
+  appearance: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+}
+
+.auth-action[disabled],
+.auth-action[data-pending='true'] {
+  cursor: progress;
+  opacity: 0.72;
+}

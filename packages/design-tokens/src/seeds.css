@@ -1,0 +1,20 @@
+/*
+ * Color Seeds
+ *
+ * These base tokens seed the color palettes. For best results, use a midtone
+ * color such as any of the 500-level colors from https://color.surf/
+ *
+ * Avoid using seed colors directly in stylesheets.
+ */
+
+:root,
+.sardrobe-light,
+.sardrobe-dark,
+[data-theme='light'],
+[data-theme='dark'] {
+  --sardrobe-primary-seed: #4a97f4;
+  --sardrobe-neutral-seed: #8b8c93;
+  --sardrobe-success-seed: #5dbb55;
+  --sardrobe-warning-seed: #e89a26;
+  --sardrobe-destructive-seed: #ef5655;
+}

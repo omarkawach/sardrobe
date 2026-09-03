@@ -1,0 +1,12 @@
+---
+import { AppShell } from '../components/AppShell.tsx'
+import BaseLayout from '../layouts/BaseLayout.astro'
+---
+
+<BaseLayout
+  title="Sardrobe | Your Wardrobe"
+  description="Your private Sardrobe workspace for organizing clothes, outfit plans, and wardrobe building blocks."
+  noindex
+>
+  <AppShell client:load />
+</BaseLayout>

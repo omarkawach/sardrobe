@@ -1,0 +1,46 @@
+/*
+ * Dark Theme Semantic Colors
+ */
+
+.sardrobe-dark,
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --sardrobe-background-color: var(--sardrobe-neutral-950);
+  --sardrobe-paper-color: color-mix(in oklab, var(--sardrobe-neutral-950), white 2.5%);
+  --sardrobe-text-body: var(--sardrobe-neutral-200);
+  --sardrobe-text-muted: var(--sardrobe-neutral-500);
+  --sardrobe-focus-color: var(--sardrobe-primary-fill-mid);
+  --sardrobe-focus-ring: var(--sardrobe-border-style) var(--sardrobe-focus-width)
+    var(--sardrobe-focus-color);
+  --sardrobe-selection-background-color: var(--sardrobe-primary-700);
+  --sardrobe-selection-color: var(--sardrobe-text-body);
+  --sardrobe-shadow-color: black;
+  --sardrobe-shadow-soft: 0 2px 4px color-mix(in oklab, transparent, var(--sardrobe-shadow-color) 12%);
+  --sardrobe-shadow-mid: 0 4px 8px color-mix(in oklab, transparent, var(--sardrobe-shadow-color) 16%);
+
+  /* Primary */
+  --sardrobe-primary-fill-mid: color-mix(in oklab, var(--sardrobe-primary-600), black 7.5%);
+  --sardrobe-primary-fill-loud: var(--sardrobe-primary-200);
+  --sardrobe-primary-text-on-mid: white;
+  --sardrobe-primary-text-colorful: var(--sardrobe-primary-500);
+
+  /* Neutral */
+  --sardrobe-neutral-fill-softer: color-mix(in oklab, var(--sardrobe-neutral-900), white 1%);
+  --sardrobe-neutral-fill-soft: var(--sardrobe-neutral-800);
+  --sardrobe-neutral-fill-mid: color-mix(in oklab, var(--sardrobe-neutral-600), black 7.5%);
+  --sardrobe-neutral-text-on-soft: var(--sardrobe-neutral-100);
+  --sardrobe-neutral-text-colorful: var(--sardrobe-neutral-500);
+  --sardrobe-neutral-stroke-soft: var(--sardrobe-neutral-800);
+
+  /* Constructive */
+  --sardrobe-success-fill-mid: color-mix(in oklab, var(--sardrobe-success-600), black 16%);
+
+  /* Caution */
+  --sardrobe-warning-fill-mid: color-mix(in oklab, var(--sardrobe-warning-600), black 18%);
+
+  /* Destructive */
+  --sardrobe-destructive-fill-mid: color-mix(in oklab, var(--sardrobe-destructive-600), black 7.5%);
+  --sardrobe-destructive-text-on-mid: white;
+  --sardrobe-destructive-text-colorful: var(--sardrobe-destructive-500);
+}

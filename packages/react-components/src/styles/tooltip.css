@@ -1,0 +1,52 @@
+.tooltip__positioner {
+  z-index: 200;
+}
+
+.tooltip__popup {
+  padding-block: 0.375rem;
+  padding-inline: 0.75rem;
+  font-family: var(--sardrobe-font-family);
+  font-size: 0.75rem;
+  line-height: 1.25;
+  color: var(--sardrobe-text-body);
+  background-color: var(--sardrobe-paper-color);
+  border: var(--sardrobe-border-style) var(--sardrobe-border-width) var(--sardrobe-neutral-stroke-soft);
+  border-radius: var(--sardrobe-border-radius-md);
+  box-shadow: var(--sardrobe-shadow-soft);
+}
+
+.tooltip__popup[data-starting-style],
+.tooltip__popup[data-ending-style] {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+.tooltip__arrow {
+  width: 0.5rem;
+  height: 0.5rem;
+  background-color: var(--sardrobe-paper-color);
+  border: var(--sardrobe-border-style) var(--sardrobe-border-width) var(--sardrobe-neutral-stroke-soft);
+  border-right: none;
+  border-bottom: none;
+  transform: rotate(45deg);
+}
+
+[data-side='top'] .tooltip__arrow {
+  bottom: -0.25rem;
+  transform: rotate(-135deg);
+}
+
+[data-side='bottom'] .tooltip__arrow {
+  top: -0.25rem;
+  transform: rotate(45deg);
+}
+
+[data-side='left'] .tooltip__arrow {
+  right: -0.25rem;
+  transform: rotate(135deg);
+}
+
+[data-side='right'] .tooltip__arrow {
+  left: -0.25rem;
+  transform: rotate(-45deg);
+}

@@ -1,0 +1,33 @@
+{
+  "name": "@sardrobe/backend",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "cf:check": "wrangler deploy --dry-run",
+    "cf:check:sardrobe:development": "wrangler deploy --dry-run --config wrangler.sardrobe.jsonc --env development",
+    "cf:check:sardrobe:production": "wrangler deploy --dry-run --config wrangler.sardrobe.jsonc --env production",
+    "types": "wrangler types --env-file .env.types",
+    "deploy": "wrangler deploy",
+    "deploy:sardrobe:development": "wrangler deploy --config wrangler.sardrobe.jsonc --env development",
+    "deploy:sardrobe:production": "wrangler deploy --config wrangler.sardrobe.jsonc --env production"
+  },
+  "dependencies": {
+    "@sardrobe/data-ops": "workspace:*",
+    "@sentry/cloudflare": "catalog:",
+    "better-auth": "^1.7.2",
+    "drizzle-orm": "^0.45.2",
+    "hono": "catalog:",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.22.0",
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:",
+    "wrangler": "4.127.0"
+  }
+}

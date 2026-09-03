@@ -1,0 +1,45 @@
+{
+  "name": "sardrobe",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Open-source AI digital wardrobe with local image processing, outfit planning, packing lists, WebMCP, and Cloudflare deployment.",
+  "license": "MIT",
+  "packageManager": "pnpm@10.33.0",
+  "scripts": {
+    "dev": "pnpm --parallel --filter @sardrobe/backend --filter @sardrobe/frontend --filter @sardrobe/background-remover dev",
+    "build": "pnpm -r --if-present build",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "test": "pnpm -r --if-present test",
+    "test:a11y": "pnpm --filter @sardrobe/react-components test:a11y",
+    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm build-storybook && pnpm test:a11y && pnpm check:cloudflare",
+    "check:cloudflare": "pnpm --filter @sardrobe/backend cf:check && pnpm --filter @sardrobe/frontend cf:check",
+    "db:migrate:local": "pnpm --filter @sardrobe/data-ops db:migrate:local",
+    "db:migrate:remote": "pnpm --filter @sardrobe/data-ops db:migrate:remote",
+    "deploy:bootstrap": "pnpm --filter @sardrobe/backend deploy && pnpm db:migrate:remote && pnpm --filter @sardrobe/frontend deploy",
+    "deploy": "pnpm db:migrate:remote && pnpm --filter @sardrobe/backend deploy && pnpm --filter @sardrobe/frontend deploy",
+    "db:migrate:sardrobe:development": "pnpm --filter @sardrobe/data-ops db:migrate:sardrobe:development",
+    "db:migrate:sardrobe:production": "pnpm --filter @sardrobe/data-ops db:migrate:sardrobe:production",
+    "deploy:sardrobe:development": "pnpm db:migrate:sardrobe:development && pnpm --filter @sardrobe/backend deploy:sardrobe:development && pnpm --filter @sardrobe/frontend deploy:sardrobe:development",
+    "deploy:sardrobe:production": "pnpm db:migrate:sardrobe:production && pnpm --filter @sardrobe/backend deploy:sardrobe:production && pnpm --filter @sardrobe/frontend deploy:sardrobe:production",
+    "storybook": "pnpm --filter @sardrobe/react-components storybook",
+    "build-storybook": "pnpm --filter @sardrobe/react-components build-storybook"
+  },
+  "pnpm": {
+    "overrides": {
+      "@cloudflare/workers-types": "4.20260702.1",
+      "@esbuild-kit/core-utils>esbuild": "0.25.12",
+      "@huggingface/transformers>sharp": "0.35.4",
+      "onnxruntime-node>adm-zip": "0.6.0",
+      "tsup>esbuild": "0.28.1"
+    }
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.9.1",
+    "eslint-plugin-astro": "^3.1.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.11.0",
+    "typescript-eslint": "^8.68.0"
+  }
+}

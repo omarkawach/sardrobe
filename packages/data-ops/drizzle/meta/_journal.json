@@ -1,0 +1,62 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1778217093723,
+      "tag": "0000_sloppy_blade",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1778317436146,
+      "tag": "0001_charming_peter_quill",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1779000000000,
+      "tag": "0002_spotty_molecule_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1779232698451,
+      "tag": "0003_shallow_moon_knight",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1779248548385,
+      "tag": "0004_youthful_black_tarantula",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1779558943952,
+      "tag": "0005_happy_rawhide_kid",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1787859781687,
+      "tag": "0006_panoramic_talon",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1788193938077,
+      "tag": "0007_remove_empty_outfits",
+      "breakpoints": true
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+.input {
+  display: flex;
+  width: 100%;
+  height: var(--sardrobe-form-control-height-md);
+  padding-block: 0.5rem;
+  padding-inline: 0.75rem;
+  font-family: var(--sardrobe-font-family);
+  font-size: var(--sardrobe-form-control-font-size-md);
+  line-height: 1.25;
+  color: var(--sardrobe-text-body);
+  background-color: var(--sardrobe-background-color);
+  border: var(--sardrobe-border-style) var(--sardrobe-border-width) var(--sardrobe-neutral-stroke-soft);
+  border-radius: var(--sardrobe-border-radius-md);
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.input::placeholder {
+  color: var(--sardrobe-text-muted);
+}
+
+.input:focus-visible {
+  outline: none;
+  border-color: var(--sardrobe-focus-color);
+  box-shadow:
+    0 0 0 2px var(--sardrobe-background-color),
+    0 0 0 4px color-mix(in oklab, var(--sardrobe-focus-color), transparent 80%);
+}
+
+.input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

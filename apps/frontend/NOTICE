@@ -1,0 +1,51 @@
+Sardrobe (frontend)
+Copyright (c) 2026 Omar Kawach
+
+This software is distributed under the MIT License. See the LICENSE file for
+the full text.
+
+================================================================================
+Third-party acknowledgements
+================================================================================
+
+This application performs in-browser background removal via the bundled
+@sardrobe/background-remover package, which runs the DIS ISNet model on ONNX
+Runtime Web. The frontend and background-removal package are distributed under
+the MIT License. Their third-party components retain their own licenses:
+
+  DIS (Dichotomous Image Segmentation) — ISNet architecture and model
+  Copyright (c) Xuebin Qin and the DIS authors
+  Code license: Apache License 2.0
+  Source:  https://github.com/xuebinqin/DIS
+  Model:   isnet-general-use.pth, distributed by the DIS authors from links in
+           the official DIS README
+
+  - onnxruntime-web  — MIT — https://www.npmjs.com/package/onnxruntime-web
+  - lodash-es        — MIT — https://lodash.com/
+  - ndarray          — MIT — https://www.npmjs.com/package/ndarray
+  - zod              — MIT — https://www.npmjs.com/package/zod
+
+The DIS repository's README expressly applies Apache-2.0 to its code and
+evaluation metric. The official pre-trained weight file is hosted separately;
+the upstream project does not state a separate license for that file. Sardrobe's
+ONNX model is a converted form of those official weights, with provenance and
+conversion details documented in
+../../packages/background-remover/tooling/README.md.
+
+All other dependencies retain their respective upstream licenses as declared
+in their package metadata.
+
+The optional on-device planning AI feature runs the following components entirely in the
+user's browser:
+
+  SmolVLM-500M-Instruct
+  Copyright (c) Hugging Face contributors
+  License: Apache License 2.0
+  Source:  https://huggingface.co/HuggingFaceTB/SmolVLM-500M-Instruct
+
+  - Transformers.js               — Apache-2.0 — https://github.com/huggingface/transformers.js
+  - Browser AI Transformers.js    — Apache-2.0 — https://github.com/jakobhoeg/browser-ai
+  - Vercel AI SDK                 — Apache-2.0 — https://github.com/vercel/ai
+
+AI model weights are downloaded on first use and are not committed to
+this repository.

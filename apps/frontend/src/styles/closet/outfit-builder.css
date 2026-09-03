@@ -1,0 +1,724 @@
+.closet-builder-dialog.dialog__popup {
+  inline-size: min(64rem, calc(100vw - 2rem));
+  max-inline-size: 64rem;
+  block-size: min(82vh, 44rem);
+  max-block-size: 82vh;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--closet-card-flat);
+  box-shadow:
+    0 1.4rem 4rem rgb(36 35 31 / 0.18),
+    0 0 0 1px var(--closet-rule);
+}
+
+.closet-builder-drawer.drawer__popup {
+  block-size: min(92vh, 50rem);
+  border-radius: 16px 16px 0 0;
+  background: var(--closet-card-flat);
+}
+
+.closet-builder-drawer__content {
+  block-size: 100%;
+  overflow: hidden;
+}
+
+.closet-builder {
+  display: flex;
+  flex-direction: column;
+  block-size: 100%;
+  background: var(--closet-card-flat);
+}
+
+.closet-builder__topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border-block-end: 1px solid var(--closet-rule);
+  background: rgb(255 255 255 / 0.54);
+}
+
+.closet-builder__title {
+  margin: 0;
+  font-family: var(--sardrobe-font-family-heading);
+  font-size: 1.3rem;
+  color: var(--landing-ink);
+}
+
+.closet-builder__stepper {
+  margin: 0.2rem 0 0;
+  color: var(--landing-muted);
+  font-size: 0.85rem;
+}
+
+.closet-builder__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 2.2rem;
+  block-size: 2.2rem;
+  border: 1px solid var(--closet-rule);
+  border-radius: 6px;
+  background: var(--closet-panel-strong);
+  cursor: pointer;
+}
+
+.closet-builder__close:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--landing-accent), white 18%);
+  outline-offset: 2px;
+}
+
+.closet-builder__compose,
+.closet-builder__describe {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--closet-panel-flat);
+}
+
+.closet-builder__describe {
+  grid-template-columns: minmax(0, 1fr) minmax(20rem, 26rem);
+}
+
+.closet-builder__canvas-wrap {
+  background: var(--closet-panel-flat);
+}
+
+@media (max-width: 56rem) {
+  .closet-builder__compose,
+  .closet-builder__describe {
+    display: flex;
+    flex-direction: column;
+    grid-template-columns: none;
+    grid-template-rows: none;
+    overflow: hidden;
+  }
+
+  .closet-builder__compose .closet-builder__canvas-wrap,
+  .closet-builder__describe .closet-builder__canvas-wrap {
+    order: 1;
+    flex: 0 0 auto;
+    padding: 0.6rem;
+    block-size: 36svh;
+    max-block-size: 18rem;
+  }
+
+  .closet-builder__compose .closet-builder__canvas,
+  .closet-builder__describe .closet-builder__canvas {
+    --piece-h-top: clamp(3.5rem, 10svh, 5rem);
+    --piece-h-outerwear: clamp(3.5rem, 10svh, 5rem);
+    --piece-h-bottom: clamp(4rem, 13svh, 6.5rem);
+    --piece-h-bag: clamp(1.8rem, 5svh, 2.6rem);
+    --piece-h-shoes: clamp(1.5rem, 4svh, 2.2rem);
+    --piece-h-belt: clamp(1.2rem, 3svh, 1.8rem);
+    --piece-h-accessories: clamp(1.5rem, 4svh, 2.2rem);
+  }
+
+  .closet-builder__compose .closet-builder__canvas,
+  .closet-builder__describe .closet-builder__canvas {
+    inline-size: auto;
+    block-size: 100%;
+    max-block-size: 100%;
+  }
+
+  .closet-builder__compose .closet-builder__picker {
+    order: 2;
+    flex: 1 1 auto;
+    min-block-size: 0;
+    border-inline-end: 0;
+    border-block-start: 1px solid var(--closet-rule);
+  }
+
+  .closet-builder__describe .closet-builder__details {
+    order: 2;
+    flex: 1 1 auto;
+    min-block-size: 0;
+    border-inline-start: 0;
+    border-block-start: 1px solid var(--closet-rule);
+  }
+}
+
+/* Picker */
+
+.closet-builder__picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.85rem;
+  border-inline-end: 1px solid var(--closet-rule);
+  background: var(--closet-panel);
+  min-height: 0;
+}
+
+.closet-builder__picker-tabs {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.3rem;
+  min-block-size: 2.25rem;
+  padding-block: 0.1rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.closet-builder__picker-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.closet-builder__picker-tab {
+  flex: 0 0 auto;
+  padding: 0.25rem 0.55rem;
+  border: 1px solid var(--closet-rule);
+  border-radius: 999px;
+  background: var(--closet-card-flat);
+  color: var(--landing-ink);
+  font-size: 0.78rem;
+  line-height: 1.15;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.closet-builder__picker-tab:hover {
+  border-color: color-mix(in oklab, var(--closet-accent), white 18%);
+}
+
+.closet-builder__picker-tab:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--landing-accent), white 18%);
+  outline-offset: 2px;
+}
+
+.closet-builder__picker-tab--active {
+  background: var(--landing-accent);
+  border-color: var(--landing-accent);
+  color: var(--landing-surface);
+}
+
+.closet-builder__picker-search {
+  margin: 0;
+}
+
+.closet-builder__picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
+  gap: 0.5rem;
+  overflow-y: auto;
+  padding-block-end: 0.2rem;
+}
+
+.closet-builder__picker-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.25rem;
+  padding: 0.3rem;
+  border: 1px solid var(--closet-rule);
+  border-radius: 6px;
+  background: var(--closet-card-flat);
+  cursor: pointer;
+  text-align: start;
+  position: relative;
+}
+
+.closet-builder__picker-card:hover {
+  border-color: color-mix(in oklab, var(--closet-accent), white 14%);
+}
+
+.closet-builder__picker-card:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--landing-accent), white 18%);
+  outline-offset: 2px;
+}
+
+.closet-builder__picker-card--placed {
+  opacity: 0.55;
+}
+
+.closet-builder__picker-card--placed::after {
+  content: '✓';
+  position: absolute;
+  top: 0.3rem;
+  right: 0.3rem;
+  inline-size: 1.2rem;
+  block-size: 1.2rem;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--landing-accent);
+  color: var(--landing-surface);
+  font-size: 0.75rem;
+}
+
+.closet-builder__picker-empty {
+  display: grid;
+  gap: 0.4rem;
+  place-items: center;
+  padding: 1.2rem;
+  border: 1px dashed var(--closet-rule);
+  border-radius: 6px;
+  text-align: center;
+  color: var(--landing-muted);
+}
+
+.closet-builder__picker-empty strong {
+  color: var(--landing-ink);
+}
+
+/* Canvas */
+
+.closet-builder__canvas-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.closet-builder__canvas {
+  --piece-h-top: 28.5cqh;
+  --piece-h-outerwear: 28.5cqh;
+  --piece-h-bottom: 34.5cqh;
+  --piece-h-bag: 12.75cqh;
+  --piece-h-shoes: 10.5cqh;
+  --piece-h-belt: 9cqh;
+  --piece-h-accessories: 10.5cqh;
+  position: relative;
+  isolation: isolate;
+  container-type: size;
+  aspect-ratio: 3 / 4;
+  aspect-ratio: 3 / 4;
+  background: var(--closet-card-flat);
+  border-radius: 8px;
+  border: 1px solid var(--closet-rule);
+  inline-size: 100%;
+  max-inline-size: 26rem;
+  block-size: auto;
+  max-block-size: 100%;
+  overflow: hidden;
+  user-select: none;
+}
+
+.closet-builder__canvas--interactive {
+  touch-action: none;
+}
+
+.closet-builder__canvas-empty {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  color: var(--landing-muted);
+  font-size: 0.85rem;
+  text-align: center;
+  pointer-events: none;
+}
+
+.closet-builder__piece {
+  position: absolute;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: max-content;
+  block-size: max-content;
+  min-width: 0;
+  max-inline-size: none;
+  transform-origin: center;
+}
+
+.closet-builder__piece--interactive {
+  cursor: grab;
+}
+
+.closet-builder__piece--interactive:active {
+  cursor: grabbing;
+}
+
+.closet-builder__piece--selected {
+  outline: 2px solid color-mix(in oklab, var(--landing-accent), white 18%);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.closet-builder__piece:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--landing-accent), white 18%);
+  outline-offset: 2px;
+}
+
+.closet-builder__piece img {
+  display: block;
+  block-size: var(--piece-h, 6rem);
+  inline-size: auto;
+  max-inline-size: none;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.closet-builder__piece--top img { block-size: var(--piece-h-top); }
+.closet-builder__piece--outerwear img { block-size: var(--piece-h-outerwear); }
+.closet-builder__piece--bottom img { block-size: var(--piece-h-bottom); }
+.closet-builder__piece--shoes img { block-size: var(--piece-h-shoes); }
+.closet-builder__piece--bag img { block-size: var(--piece-h-bag); }
+.closet-builder__piece--belt img { block-size: var(--piece-h-belt); }
+.closet-builder__piece--accessories img { block-size: var(--piece-h-accessories); }
+
+.closet-builder__canvas-toolbar {
+  position: absolute;
+  bottom: 0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  background: var(--closet-panel-strong);
+  border: 1px solid var(--closet-rule);
+  border-radius: 8px;
+  box-shadow: 0 0.4rem 1rem rgb(36 35 31 / 0.1);
+  z-index: 10;
+}
+
+.closet-builder__canvas-tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 2rem;
+  block-size: 2rem;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--landing-ink);
+  cursor: pointer;
+}
+
+.closet-builder__canvas-tool:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--closet-panel-strong), black 6%);
+}
+
+.closet-builder__canvas-tool:disabled {
+  color: color-mix(in oklab, var(--landing-ink), transparent 62%);
+  cursor: not-allowed;
+}
+
+.closet-builder__canvas-tool--destructive:disabled {
+  color: color-mix(in oklab, var(--landing-destructive, #b54a3a), transparent 62%);
+}
+
+.closet-builder__canvas-tool:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--landing-accent), white 18%);
+  outline-offset: 2px;
+}
+
+.closet-builder__canvas-tool--destructive {
+  color: var(--landing-destructive, #b54a3a);
+}
+
+.closet-builder__canvas-toolbar-divider {
+  display: inline-block;
+  inline-size: 1px;
+  block-size: 1.25rem;
+  background: var(--closet-rule);
+}
+
+.closet-builder__compose .closet-builder__canvas-wrap {
+  --closet-canvas-toolbar-rail: 2.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) var(--closet-canvas-toolbar-rail);
+  align-items: stretch;
+  row-gap: 0.75rem;
+}
+
+.closet-builder__compose .closet-builder__canvas {
+  grid-column: 1;
+  grid-row: 1;
+  inline-size: 100%;
+  block-size: 100%;
+  max-inline-size: none;
+  max-block-size: none;
+  aspect-ratio: auto;
+  justify-self: stretch;
+  align-self: stretch;
+}
+
+.closet-builder__compose .closet-builder__canvas-toolbar {
+  position: static;
+  inset: auto;
+  transform: none;
+  grid-column: 1;
+  grid-row: 2;
+  flex-direction: row;
+  justify-self: center;
+  align-self: center;
+}
+
+.closet-builder__piece-fallback {
+  display: inline-block;
+  padding: 1rem 0.75rem;
+  color: var(--landing-muted);
+  font-size: 0.7rem;
+  border: 1px dashed var(--closet-rule);
+  border-radius: 6px;
+}
+
+/* Read-only canvas in step 2 — same sizing as step 1 */
+
+/* Step 2 - details form */
+
+.closet-builder__details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 1rem;
+  overflow-y: auto;
+  min-height: 0;
+  border-inline-start: 1px solid var(--closet-rule);
+  background: var(--closet-card-flat);
+}
+
+.closet-builder__describe .closet-builder__canvas-wrap {
+  padding: 1rem;
+  background: var(--closet-card-flat);
+}
+
+.closet-builder__describe .closet-builder__canvas {
+  border-color: transparent;
+  background: transparent;
+}
+
+.closet-builder__validation {
+  color: var(--sardrobe-destructive-fill-mid);
+  font-size: 0.85rem;
+}
+
+.closet-builder__delete-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.75rem;
+  border: 1px solid color-mix(in oklab, var(--sardrobe-destructive-fill-mid), var(--closet-rule) 35%);
+  border-radius: 6px;
+  background: var(--closet-panel-flat);
+}
+
+.closet-builder__delete-confirm strong {
+  color: var(--landing-ink);
+}
+
+.closet-builder__delete-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Footer */
+
+.closet-builder__footer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-block-start: 1px solid var(--closet-rule);
+  background: rgb(255 255 255 / 0.54);
+}
+
+.closet-builder__footer-spacer {
+  flex: 1;
+}
+
+.closet-builder__footer .button.button--outline {
+  border-color: var(--closet-rule-strong);
+  background: rgb(255 255 255 / 0.82);
+}
+
+.closet-builder__footer .button.button--outline:hover:not([data-disabled]) {
+  border-color: color-mix(in oklab, var(--closet-rule-strong), var(--landing-ink) 18%);
+  background: rgb(255 255 255 / 0.96);
+}
+
+.closet-builder__status {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  clip: rect(0 0 0 0);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* Responsive viewport hardening */
+@media (max-width: 62rem) {
+  .closet-mobile-nav__item {
+    min-inline-size: 0;
+  }
+
+  .closet-mobile-nav__item > span:last-child {
+    max-inline-size: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .closet-outfits-view {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
+    block-size: 100%;
+    min-block-size: 0;
+    overflow: hidden;
+    padding: 0.75rem;
+  }
+
+  .closet-outfits {
+    grid-template-rows: auto minmax(0, 1fr);
+    min-block-size: 0;
+  }
+
+  .closet-outfit-grid {
+    min-block-size: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-block-end: 1rem;
+  }
+
+  .closet-filters-drawer.drawer__popup {
+    block-size: min(88dvh, 42rem);
+    max-block-size: min(88dvh, 42rem);
+  }
+
+  .closet-filters-drawer__content,
+  .closet-builder-drawer__content,
+  .closet-builder {
+    min-block-size: 0;
+  }
+
+  .closet-builder-drawer.drawer__popup {
+    block-size: min(96dvh, 52rem);
+    max-block-size: min(96dvh, 52rem);
+  }
+
+  .closet-builder__footer {
+    padding-block-end: calc(0.75rem + env(safe-area-inset-bottom));
+  }
+
+  .closet-builder__compose .closet-builder__canvas-wrap {
+    grid-template-columns: minmax(0, 1fr) var(--closet-canvas-toolbar-rail);
+    grid-template-rows: minmax(0, 1fr);
+    column-gap: 0.75rem;
+    row-gap: 0;
+  }
+
+  .closet-builder__compose .closet-builder__canvas-toolbar {
+    grid-column: 2;
+    grid-row: 1;
+    flex-direction: column;
+    justify-self: end;
+  }
+
+  .closet-builder__compose .closet-builder__canvas-toolbar-divider {
+    inline-size: 1.25rem;
+    block-size: 1px;
+  }
+}
+
+@media (max-width: 56rem) {
+  .closet-builder__compose .closet-builder__canvas-wrap,
+  .closet-builder__describe .closet-builder__canvas-wrap {
+    block-size: clamp(11rem, 30svh, 14rem);
+    max-block-size: 14rem;
+  }
+
+  .closet-builder__compose .closet-builder__canvas-wrap {
+    column-gap: 0.5rem;
+  }
+
+  .closet-builder__picker {
+    overflow: hidden;
+  }
+
+  .closet-builder__picker-tabs {
+    padding-block-end: 0.2rem;
+  }
+
+  .closet-builder__picker-tab {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 1.9rem;
+  }
+
+  .closet-builder__picker-card {
+    border-color: var(--closet-rule-strong);
+    background: var(--closet-card-flat);
+  }
+
+  .closet-builder__picker-card-fallback {
+    border: var(--closet-hairline) dashed var(--closet-rule-strong);
+  }
+
+  .closet-builder__picker-grid {
+    align-content: start;
+    align-items: start;
+    flex: 1 1 auto;
+    grid-auto-rows: max-content;
+    min-block-size: 0;
+  }
+
+  .closet-builder__footer {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+  }
+
+  .closet-builder__footer-spacer {
+    display: none;
+  }
+
+  .closet-builder__footer .button {
+    justify-content: center;
+    inline-size: 100%;
+    min-inline-size: 0;
+    padding-inline: 0.65rem;
+  }
+
+  .closet-builder__footer--create.closet-builder__footer--describe .button:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 56rem) and (max-height: 44rem) {
+  .closet-builder__compose .closet-builder__canvas-wrap,
+  .closet-builder__describe .closet-builder__canvas-wrap {
+    block-size: clamp(8.5rem, 26svh, 10rem);
+    max-block-size: 10rem;
+  }
+
+  .closet-builder__compose .closet-builder__canvas-toolbar {
+    gap: 0.15rem;
+    padding: 0.2rem;
+  }
+
+  .closet-builder__compose .closet-builder__canvas-tool {
+    inline-size: 1.65rem;
+    block-size: 1.65rem;
+  }
+}
+
+@media (forced-colors: active) {
+  .closet-nav-item:disabled,
+  .closet-mobile-nav__item:disabled {
+    color: GrayText;
+    opacity: 1;
+  }
+}

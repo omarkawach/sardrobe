@@ -1,0 +1,31 @@
+.avatar {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  overflow: hidden;
+  font-family: var(--sardrobe-font-family);
+  background-color: var(--sardrobe-neutral-fill-softer);
+  border-radius: var(--sardrobe-border-radius-pill);
+  flex-shrink: 0;
+}
+
+.avatar__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar__fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 0.875rem;
+  font-weight: var(--sardrobe-font-weight-semibold);
+  color: var(--sardrobe-text-muted);
+  text-transform: uppercase;
+}

@@ -1,0 +1,61 @@
+:root {
+  --palette-50: #e1bb80;
+  --palette-200: #806443;
+  --palette-400: #7b6b43;
+  --palette-500: #685634;
+  --palette-700: #352208;
+  --palette-950: #241705;
+  --palette-contrast: #fff9ef;
+  --site-scrollbar-size: 0.82rem;
+}
+
+:root,
+.sardrobe-light,
+[data-theme='light'] {
+  --sardrobe-primary-seed: var(--palette-500);
+  --sardrobe-neutral-seed: #8d7855;
+  --sardrobe-success-seed: var(--palette-400);
+  --sardrobe-warning-seed: var(--palette-400);
+  --sardrobe-font-family:
+    'Helvetica Neue', Helvetica, Arial, system-ui, -apple-system,
+    BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --sardrobe-font-family-heading:
+    'Sofia Pro', Montserrat, 'Helvetica Neue', Helvetica, Arial, system-ui,
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --landing-background: #f5ead8;
+  --landing-surface: #fffaf0;
+  --landing-surface-strong: #ead6af;
+  --landing-ink: var(--palette-700);
+  --landing-muted: #6b5a39;
+  --landing-line: rgb(53 34 8 / 0.12);
+  --landing-shadow: rgb(53 34 8 / 0.16);
+  --landing-accent: var(--palette-500);
+  --landing-accent-hover: var(--palette-700);
+  --landing-glow: rgb(225 187 128 / 0.28);
+  --landing-button-text: var(--palette-contrast);
+  --site-scrollbar-thumb: color-mix(in oklab, var(--palette-700), black 8%);
+  --site-scrollbar-thumb-hover: color-mix(in oklab, var(--palette-500), var(--palette-700) 18%);
+  --site-scrollbar-track: var(--landing-background);
+}
+
+.sardrobe-dark,
+[data-theme='dark'] {
+  --sardrobe-primary-seed: var(--palette-200);
+  --sardrobe-neutral-seed: #c8b58d;
+  --sardrobe-success-seed: #bfa264;
+  --sardrobe-warning-seed: var(--palette-50);
+  --landing-background: #1f1507;
+  --landing-surface: #2b1d09;
+  --landing-surface-strong: #3b2a11;
+  --landing-ink: #f6edd9;
+  --landing-muted: #dfcfad;
+  --landing-line: rgb(225 187 128 / 0.16);
+  --landing-shadow: rgb(0 0 0 / 0.34);
+  --landing-accent: var(--palette-200);
+  --landing-accent-hover: var(--palette-400);
+  --landing-glow: rgb(225 187 128 / 0.16);
+  --landing-button-text: #221817;
+  --site-scrollbar-thumb: color-mix(in oklab, var(--palette-700), black 14%);
+  --site-scrollbar-thumb-hover: color-mix(in oklab, var(--palette-500), var(--palette-200) 26%);
+  --site-scrollbar-track: var(--landing-background);
+}

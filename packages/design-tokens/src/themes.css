@@ -1,0 +1,10 @@
+/*
+ * Global theme styles
+ */
+
+.sardrobe-light,
+.sardrobe-dark,
+[data-theme='light'],
+[data-theme='dark'] {
+  color: var(--sardrobe-text-body);
+}

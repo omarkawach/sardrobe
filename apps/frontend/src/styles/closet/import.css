@@ -1,0 +1,12 @@
+/* Import-specific rules currently live in the ordered workspace chunks; new upload styles go here. */
+
+.closet-import-limit {
+  margin: 0.75rem 0 0;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid color-mix(in oklab, var(--sardrobe-destructive-fill-mid), var(--closet-rule) 35%);
+  border-radius: 0.6rem;
+  background: color-mix(in oklab, var(--sardrobe-destructive-fill-mid), transparent 88%);
+  color: var(--sardrobe-destructive-text-colorful);
+  font-size: 0.88rem;
+  line-height: 1.4;
+}

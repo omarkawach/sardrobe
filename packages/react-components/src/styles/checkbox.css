@@ -1,0 +1,42 @@
+.checkbox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  border: var(--sardrobe-border-style) var(--sardrobe-border-width) var(--sardrobe-neutral-stroke-soft);
+  border-radius: calc(var(--sardrobe-border-radius-md) - 4px);
+  background-color: var(--sardrobe-background-color);
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease;
+}
+
+.checkbox:hover:not([data-disabled]) {
+  border-color: var(--sardrobe-primary-fill-mid);
+}
+
+.checkbox:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--sardrobe-background-color),
+    0 0 0 4px var(--sardrobe-focus-color);
+}
+
+.checkbox[data-checked] {
+  background-color: var(--sardrobe-primary-fill-mid);
+  border-color: var(--sardrobe-primary-fill-mid);
+}
+
+.checkbox[data-disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.checkbox__indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--sardrobe-primary-text-on-mid);
+}

@@ -1,0 +1,44 @@
+/*
+ * Color Palettes
+ *
+ * Generated from seed colors via color-mix(in oklab). Palettes are static in
+ * both light and dark mode — 100 is always light and 900 is always dark.
+ *
+ * Use semantic tokens (fill/text/stroke) instead of these primitives when
+ * building components that support dark mode.
+ */
+
+:root,
+.sardrobe-light,
+.sardrobe-dark,
+[data-theme='light'],
+[data-theme='dark'] {
+  /* Primary */
+  --sardrobe-primary-200: color-mix(in oklab, var(--sardrobe-primary-seed), white 70%);
+  --sardrobe-primary-300: color-mix(in oklab, var(--sardrobe-primary-seed), white 47%);
+  --sardrobe-primary-500: var(--sardrobe-primary-seed);
+  --sardrobe-primary-600: color-mix(in oklab, var(--sardrobe-primary-seed), black 15.5%);
+  --sardrobe-primary-700: color-mix(in oklab, var(--sardrobe-primary-seed), black 28.25%);
+  --sardrobe-primary-800: color-mix(in oklab, var(--sardrobe-primary-seed), black 43.5%);
+
+  /* Neutral */
+  --sardrobe-neutral-100: color-mix(in oklab, var(--sardrobe-neutral-seed), white 87%);
+  --sardrobe-neutral-200: color-mix(in oklab, var(--sardrobe-neutral-seed), white 70%);
+  --sardrobe-neutral-300: color-mix(in oklab, var(--sardrobe-neutral-seed), white 47%);
+  --sardrobe-neutral-500: var(--sardrobe-neutral-seed);
+  --sardrobe-neutral-600: color-mix(in oklab, var(--sardrobe-neutral-seed), black 15.5%);
+  --sardrobe-neutral-700: color-mix(in oklab, var(--sardrobe-neutral-seed), black 28.25%);
+  --sardrobe-neutral-800: color-mix(in oklab, var(--sardrobe-neutral-seed), black 43.5%);
+  --sardrobe-neutral-900: color-mix(in oklab, var(--sardrobe-neutral-seed), black 58.5%);
+  --sardrobe-neutral-950: color-mix(in oklab, var(--sardrobe-neutral-seed), black 73.75%);
+
+  /* Constructive */
+  --sardrobe-success-600: color-mix(in oklab, var(--sardrobe-success-seed), black 15.5%);
+
+  /* Caution */
+  --sardrobe-warning-600: color-mix(in oklab, var(--sardrobe-warning-seed), black 15.5%);
+
+  /* Destructive */
+  --sardrobe-destructive-500: var(--sardrobe-destructive-seed);
+  --sardrobe-destructive-600: color-mix(in oklab, var(--sardrobe-destructive-seed), black 15.5%);
+}

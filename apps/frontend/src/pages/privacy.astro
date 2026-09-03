@@ -1,0 +1,299 @@
+---
+import LegalLayout from "../layouts/LegalLayout.astro";
+import ObfuscatedEmail from "../components/ObfuscatedEmail.astro";
+
+const updated = "August 27, 2026";
+---
+
+<LegalLayout
+  title="Privacy Policy | Sardrobe"
+  description="How Sardrobe collects, uses, and protects your data in your private digital wardrobe."
+  heading="Privacy Policy"
+  updated={updated}
+>
+  <section class="legal__section">
+    <p>
+      Sardrobe is a private digital wardrobe. You upload photos of clothes you
+      already own, organize them, and plan outfits. We keep what we collect to
+      the minimum needed to provide, secure, and improve the service. We do not
+      sell your personal information or use it for targeted advertising.
+    </p>
+  </section>
+
+  <section class="legal__section">
+    <h2>Who we are</h2>
+    <p>
+      Sardrobe is operated by Omar Kawach in the United States. This policy
+      applies to Sardrobe, available at
+      <a href="https://sardrobe.com">sardrobe.com</a>. If you have any questions
+      or want to exercise a privacy right, contact us at
+      <ObfuscatedEmail user="omarkawach" domain="outlook" tld="com" />.
+    </p>
+  </section>
+
+  <section class="legal__section">
+    <h2>What we collect</h2>
+    <ul>
+      <li>
+        <strong>Account and authentication information.</strong> When you sign in
+        with Google, we receive information such as your name, email address, profile
+        photo, Google account identifier, and email-verification status. We also store
+        the authentication tokens and scopes needed to maintain and revoke the connection,
+        together with session identifiers, expiration times, IP address, and user
+        agent.
+      </li>
+      <li>
+        <strong>Wardrobe content.</strong> When you save an item, we store its finished
+        WebP cutout and the details you add, such as its name, category, color, description,
+        occasion, season, and notes. We also store your outfits and their layouts,
+        and your packing plans, dates, notes, and checklist state.
+      </li>
+      <li>
+        <strong>Technical and activity data.</strong> Our hosting and authentication
+        systems process request details, IP address, browser or device information,
+        timestamps, login method, session identifiers, and authentication activity.
+      </li>
+      <li>
+        <strong>Diagnostic and security data.</strong> Sentry receives sampled performance
+        traces, errors, and security events so we can diagnose problems and protect
+        the service. We remove request headers, cookies, query strings, request bodies,
+        IP addresses, email addresses, usernames, span data, and URL query parameters
+        before sending events. Audit events may contain an internal account identifier
+        and limited counts or action names. Session Replay is disabled, and we do
+        not intentionally send wardrobe images or free-text wardrobe content to Sentry.
+      </li>
+      <li>
+        <strong>Communications.</strong> If you contact us, we receive the information
+        in your message and the contact details you use.
+      </li>
+    </ul>
+  </section>
+
+  <section class="legal__section">
+    <h2>What stays on your device</h2>
+    <p>
+      Background removal runs in your browser. Your original source photos and
+      unsaved import drafts remain in the current browser session; Sardrobe
+      uploads only the finished cutout when you choose to save an item. Your
+      theme preference is kept in local storage.
+    </p>
+    <p>
+      The optional desktop on-device planning AI feature also runs in your browser. When you enable
+      it, your browser downloads the open SmolVLM model and may keep its files in
+      browser storage for later requests. On-device planning AI is limited to outfit and packing
+      planning; it does not identify or describe individual wardrobe items. Reference
+      images, prompts, the wardrobe catalog, and generated AI suggestions stay on your device
+      and are not sent to Sardrobe, Hugging Face, Vercel, or another AI inference
+      service. The model download host receives ordinary request information such
+      as your IP address and browser information when serving the model files.
+    </p>
+    <p>
+      We do not collect payment information, and we do not use advertising or
+      marketing trackers.
+    </p>
+  </section>
+
+  <section class="legal__section">
+    <h2>How we use your data</h2>
+    <ul>
+      <li>To create and authenticate your account.</li>
+      <li>
+        To provide your wardrobe, outfits, packing plans, and saved images.
+      </li>
+      <li>To secure the service, prevent abuse, and investigate incidents.</li>
+      <li>To monitor reliability, diagnose errors, and improve performance.</li>
+      <li>To respond to you when you contact us.</li>
+      <li>To comply with law and enforce our terms.</li>
+    </ul>
+    <p>
+      Where applicable law requires a legal basis, we process account and
+      wardrobe data to provide the service you request; security, diagnostics,
+      and limited service analytics for our legitimate interests in operating a
+      safe and reliable service; and information when needed to comply with
+      legal obligations. You may withdraw consent for any optional processing
+      that specifically relies on consent.
+    </p>
+  </section>
+
+  <section class="legal__section">
+    <h2>Cookies and device storage</h2>
+    <p>
+      We use strictly necessary first-party cookies for Google sign-in, session
+      security, and keeping you signed in. Sardrobe sessions are configured with
+      a seven-day lifetime and may be refreshed while you use the service.
+      Temporary OAuth cookies may also be used during sign-in. We use local
+      storage to remember your theme and whether the AI setting is enabled. When
+      AI is enabled, Sardrobe may prepare its browser-cached model as the
+      workspace starts. Your browser may use its cache or other browser-managed
+      storage for the downloaded model.
+    </p>
+    <p>
+      We do not use advertising, marketing, or cross-site behavioral-tracking
+      cookies. Because Sardrobe does not track your activity across unrelated
+      websites for advertising, browser "Do Not Track" signals do not change how
+      the service behaves. We do not permit third parties to collect your
+      activity over time across unrelated websites through Sardrobe for
+      behavioral advertising.
+    </p>
+  </section>
+
+  <section class="legal__section">
+    <h2>Service providers</h2>
+    <p>We rely on a few providers to operate Sardrobe:</p>
+    <ul>
+      <li>
+        <strong>Google</strong> for sign-in and revoking the Google connection when
+        you delete your account.
+      </li>
+      <li>
+        <strong>Cloudflare</strong> for hosting, request handling, image processing,
+        logs, the database, and image storage through Workers, Images, D1, and R2.
+      </li>
+      <li>
+        <strong>Sentry</strong> for error monitoring and security event logging, which
+        helps us keep the service reliable and secure. We configure it to scrub the
+        request and user fields described above and to disable Session Replay.
+      </li>
+      <li>
+        <strong>Hugging Face</strong> for distributing the open AI model files
+        to your browser. Hugging Face does not receive the photos, prompts, wardrobe
+        catalog, or suggestions processed by the downloaded model.
+      </li>
+    </ul>
+    <p>
+      These providers process data to deliver, secure, and monitor the service.
+      We do not disclose your wardrobe content to advertisers or data brokers.
+      The Buy Me a Coffee button image is hosted by Sardrobe; Buy Me a Coffee
+      receives information only if you choose to follow the external link, and
+      its own privacy policy then applies.
+    </p>
+  </section>
+
+  <section class="legal__section">
+    <h2>Browser agent access</h2>
+    <p>
+      When you are signed in and open the Sardrobe app, the site registers
+      WebMCP site tools with a compatible browser. A browser agent, such as
+      ChatGPT's in-app browser, may offer to use those tools with your current
+      signed-in session. Registration exposes tool names, descriptions, and
+      input formats; it does not by itself send your wardrobe data to an agent.
+    </p>
+    <p>
+      If you approve or direct a browser agent to call a tool, the requested
+      result is provided to the browser agent and its model provider. Depending
+      on the tool, this may
+      include wardrobe metadata, saved cutout images, outfit previews, packing
+      plans, or browser-local import drafts and their images. WebMCP tools can
+      also create, edit, submit, discard, or permanently delete content using
+      your signed-in browser session. Some destructive operations require a
+      <code>confirm: true</code> tool parameter. Your browser or agent controls
+      its review and approval experience.
+    </p>
+    <p>
+      Sardrobe does not run a relay or maintain a separate agent connection.
+      Tools are available only through a compatible browser while the signed-in
+      app is open. Data a browser agent receives is governed by the browser,
+      agent, and model provider you choose; Sardrobe does not control their
+      handling, retention, or further use of that data.
+    </p>
+  </section>
+
+  <section class="legal__section">
+    <h2>When we disclose information</h2>
+    <p>
+      We disclose information to the service providers above, when you direct us
+      to do so, when reasonably necessary to protect Sardrobe or others, or when
+      required by law. Information may also be transferred as part of a merger,
+      financing, acquisition, reorganization, or sale of all or part of the
+      service, subject to applicable law. We do not sell personal information or
+      share it for cross-context behavioral advertising.
+    </p>
+  </section>
+
+  <section class="legal__section">
+    <h2>Data retention</h2>
+    <p>
+      We keep your account and wardrobe data for as long as your account is
+      active. You can permanently delete your account at any time from the
+      account menu. After a successful deletion request, your active account,
+      sessions, wardrobe items, outfits, packing plans, and stored cutouts are
+      removed and cannot be recovered through Sardrobe. We also attempt to
+      revoke Sardrobe's Google authorization; Google revocation is best-effort
+      and does not block deletion if Google is unavailable.
+    </p>
+    <p>
+      Cloudflare D1 automatically maintains limited recovery history, so deleted
+      database records may remain in protected recovery copies for up to 30 days
+      before aging out. Security, authentication, diagnostic, and provider logs
+      may be retained for limited periods under our provider settings, backup
+      schedules, or legal obligations. We may keep a minimal record when
+      necessary to prevent abuse, resolve disputes, or comply with law.
+    </p>
+  </section>
+
+  <section class="legal__section">
+    <h2>International processing</h2>
+    <p>
+      Sardrobe is operated in the United States, and our providers may process
+      information in the United States and other countries. Those countries may
+      have different data-protection laws. Where applicable law requires a
+      transfer mechanism, we will use contractual or other lawful safeguards.
+    </p>
+  </section>
+
+  <section class="legal__section">
+    <h2>Security</h2>
+    <p>
+      We use reasonable technical and organizational safeguards designed to
+      protect personal information, including authenticated media access, secure
+      cookies, ownership checks, and data minimization. No online service can
+      guarantee absolute security, so please keep your Google account and
+      devices secure.
+    </p>
+  </section>
+
+  <section class="legal__section">
+    <h2>Your rights</h2>
+    <p>
+      Depending on where you live, you may have the right to access, correct,
+      export, or delete your personal data, and to object to or restrict certain
+      processing, withdraw consent, or receive portable data. You may also have
+      the right to complain to your local data-protection authority. We will not
+      discriminate against you for exercising a privacy right.
+    </p>
+    <p>
+      To submit a request, contact us at
+      <ObfuscatedEmail user="omarkawach" domain="outlook" tld="com" />. We may
+      need to verify your identity or authority before completing a request, and
+      legal exceptions may apply. California residents may request the
+      categories or specific pieces of information collected, correction, or
+      deletion as provided by applicable law. Sardrobe has not sold personal
+      information or shared it for cross-context behavioral advertising in the
+      preceding 12 months.
+    </p>
+  </section>
+
+  <section class="legal__section">
+    <h2>Children</h2>
+    <p>
+      Sardrobe is not directed to children under 13, and we do not knowingly
+      collect personal data from them.
+    </p>
+  </section>
+
+  <section class="legal__section">
+    <h2>Changes to this policy</h2>
+    <p>
+      We may update this policy from time to time. When we do, we'll revise the
+      "Last updated" date above. If a change materially affects how we use
+      personal information, we will provide additional notice where appropriate
+      or required.
+    </p>
+  </section>
+
+  <p class="legal__note">
+    We've kept this in plain language so it's easy to follow. If anything is
+    unclear or you'd like to know more about how your data is handled, just
+    reach out. We're happy to help.
+  </p>
+</LegalLayout>

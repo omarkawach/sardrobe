@@ -1,0 +1,49 @@
+.progress {
+  width: 100%;
+}
+
+.progress__track {
+  position: relative;
+  width: 100%;
+  height: 0.5rem;
+  overflow: hidden;
+  background-color: var(--sardrobe-neutral-fill-softer);
+  border-radius: var(--sardrobe-border-radius-pill);
+}
+
+.progress__indicator {
+  height: 100%;
+  background-color: var(--sardrobe-primary-fill-mid);
+  border-radius: var(--sardrobe-border-radius-pill);
+  transition: width 300ms ease;
+}
+
+/* Variants */
+
+.progress--success .progress__indicator {
+  background-color: var(--sardrobe-success-fill-mid);
+}
+
+.progress--warning .progress__indicator {
+  background-color: var(--sardrobe-warning-fill-mid);
+}
+
+.progress--destructive .progress__indicator {
+  background-color: var(--sardrobe-destructive-fill-mid);
+}
+
+/* Indeterminate animation */
+
+.progress[data-state='indeterminate'] .progress__indicator {
+  width: 50% !important;
+  animation: progress-indeterminate 1.5s ease-in-out infinite;
+}
+
+@keyframes progress-indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(200%);
+  }
+}

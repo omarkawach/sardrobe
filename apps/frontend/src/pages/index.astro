@@ -1,0 +1,245 @@
+---
+import { Card } from "@sardrobe/react-components";
+import createOutfit from "../assets/create-outfit.avif";
+import packingList from "../assets/packing-list.avif";
+import wardrobe from "../assets/wardrobe.avif";
+import { LandingAuthControls } from "../components/LandingAuthControls.tsx";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+
+const pageTitle = "Sardrobe | A private digital wardrobe";
+const pageDescription =
+  "A private digital wardrobe for accurate and automated clothing cutouts, outfit planning, and capsule building via WebMCP without social feeds or shopping noise.";
+const canonicalUrl = new URL("/", Astro.site ?? Astro.url).toString();
+const socialImage = new URL("/banner.png", canonicalUrl).toString();
+const socialImageAlt =
+  "Sardrobe social banner showing an organized wardrobe, clothing cutouts, and a private digital wardrobe interface.";
+const agentGuideUrl = "/.well-known/sardrobe-agent-guide.md";
+const demoVideoUrl = "https://www.youtube.com/watch?v=p9AIw63BXug";
+
+const guideSteps = [
+  {
+    title: "Upload your clothes",
+    copy:
+      "Pick one photo or a batch. Sardrobe removes the image background in your browser, then you review each draft before saving it.",
+  },
+  {
+    title: "See your wardrobe",
+    copy:
+      "Browse the clothes you uploaded. Search, filter, group by category or color, and open any item to edit the details.",
+  },
+  {
+    title: "Create outfits",
+    copy:
+      "Choose pieces from your wardrobe and arrange them on the outfit canvas. Save the look with notes for later.",
+  },
+  {
+    title: "Pack for a trip or any occasion",
+    copy:
+      "Make a packing plan for a trip, gym bag, weekend, or event. Add outfits, add single items, and check things off.",
+  },
+  {
+    title: "Automate",
+    copy:
+      "Compatible browser agents automatically discover Sardrobe’s tools after you sign in. Ask one to review drafts, clean up details, make outfits, or update packing lists—no relay setup needed.",
+    automate: true,
+  },
+];
+---
+
+<BaseLayout
+  title={pageTitle}
+  description={pageDescription}
+  canonical={canonicalUrl}
+  openGraph={{
+    basic: {
+      title: "Sardrobe private digital wardrobe",
+      type: "website",
+      image: socialImage,
+      url: canonicalUrl,
+    },
+    optional: {
+      description: pageDescription,
+      siteName: "Sardrobe",
+      locale: "en_US",
+    },
+    image: {
+      type: "image/png",
+      width: 1672,
+      height: 941,
+      alt: socialImageAlt,
+    },
+  }}
+  twitter={{
+    card: "summary_large_image",
+    title: pageTitle,
+    description: pageDescription,
+    image: socialImage,
+    imageAlt: socialImageAlt,
+  }}
+>
+  <Fragment slot="head">
+    <link
+      rel="preload"
+      as="image"
+      href={wardrobe.src}
+      type="image/avif"
+      fetchpriority="high"
+    />
+    <link rel="preload" as="image" href={packingList.src} type="image/avif" />
+    <link rel="preload" as="image" href={createOutfit.src} type="image/avif" />
+  </Fragment>
+
+  <div class="landing-page">
+    <header class="site-header">
+      <div class="site-header__inner">
+        <a class="site-logo" href="/">Sardrobe</a>
+        <div class="site-header__account">
+          <LandingAuthControls client:load placement="header" />
+        </div>
+      </div>
+    </header>
+
+    <main id="main-content" class="landing">
+      <section class="hero">
+        <div class="hero__copy">
+          <h1 class="hero__title">Your digital wardrobe, simplified.</h1>
+          <p class="hero__summary">
+            Upload photos of your clothes, plan outfits and build a capsule
+            wardrobe. Do it yourself or let your own AI agent handle it, without
+            the social feed or pressure to shop for more.
+          </p>
+          <div class="hero__actions">
+            <LandingAuthControls client:load placement="hero" />
+            <a
+              class="hero__demo-link"
+              href={demoVideoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <svg
+                class="hero__demo-icon"
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                width="16"
+                height="16"
+                fill="currentColor"
+              >
+                <path d="M8 5.14v13.72c0 .79.87 1.27 1.54.84l10.14-6.86a1 1 0 0 0 0-1.68L9.54 4.3A1 1 0 0 0 8 5.14Z" />
+              </svg>
+              Watch the demo
+            </a>
+          </div>
+        </div>
+
+        <Card className="hero__visual">
+          <figure class="hero__figure">
+            <img
+              class="hero__image"
+              src={wardrobe.src}
+              alt="An organized wardrobe with hanging clothes, shelves, and folded garments in warm neutral tones."
+              width={wardrobe.width}
+              height={wardrobe.height}
+              loading="eager"
+              decoding="sync"
+              fetchpriority="high"
+            />
+          </figure>
+        </Card>
+      </section>
+
+      <section class="features" aria-labelledby="guide-title">
+        <div class="guide-intro">
+          <h2 id="guide-title" class="section-heading__title guide-heading">How to use Sardrobe</h2>
+          <figure class="guide-preview" aria-label="Sardrobe screens">
+            <img
+              class="guide-preview__shot guide-preview__shot--back"
+              src={packingList.src}
+              alt="Sardrobe packing list with outfits and items to check off."
+              width={packingList.width}
+              height={packingList.height}
+              loading="eager"
+              decoding="sync"
+            />
+            <img
+              class="guide-preview__shot guide-preview__shot--front"
+              src={createOutfit.src}
+              alt="Sardrobe outfit builder with clothing cutouts arranged into a look."
+              width={createOutfit.width}
+              height={createOutfit.height}
+              loading="eager"
+              decoding="sync"
+            />
+          </figure>
+        </div>
+
+        <ol class="guide-steps">
+          {guideSteps.map((step, index) => (
+            <li class={step.automate ? "guide-step guide-step--automate" : "guide-step"}>
+              <span class="guide-step__num" aria-hidden="true">{index + 1}</span>
+              <div class="guide-step__body">
+                <div class="guide-step__heading">
+                  <h3>{step.title}</h3>
+                  {step.automate ? <span class="guide-step__badge">WebMCP enabled</span> : null}
+                </div>
+                <p>{step.copy}</p>
+                {step.automate ? (
+                  <div class="guide-step__actions">
+                    <a class="guide-step__link" href={agentGuideUrl}>Open agent instructions</a>
+                    <button
+                      class="guide-step__copy"
+                      type="button"
+                      data-agent-guide-copy
+                      data-agent-guide-url={agentGuideUrl}
+                    >
+                      Copy agent instructions
+                    </button>
+                    <span class="guide-step__copy-status" data-agent-guide-status role="status" aria-live="polite"></span>
+                  </div>
+                ) : null}
+              </div>
+            </li>
+          ))}
+        </ol>
+      </section>
+    </main>
+
+    <SiteFooter />
+  </div>
+
+  <script is:inline>
+    (() => {
+      const button = document.querySelector("[data-agent-guide-copy]");
+      const status = document.querySelector("[data-agent-guide-status]");
+
+      if (!(button instanceof HTMLButtonElement)) return;
+
+      button.addEventListener("click", async () => {
+        const guidePath = button.getAttribute("data-agent-guide-url") || "/.well-known/sardrobe-agent-guide.md";
+        const guideUrl = new URL(guidePath, window.location.origin).toString();
+
+        try {
+          const response = await fetch(guideUrl);
+          if (!response.ok) throw new Error("Guide could not be loaded.");
+          const instructions = await response.text();
+          await navigator.clipboard.writeText(instructions);
+          if (status) status.textContent = "Copied.";
+        } catch {
+          try {
+            await navigator.clipboard.writeText(guideUrl);
+            if (status) status.textContent = "Copied the guide link.";
+          } catch {
+            if (status) status.textContent = "Open the guide link to copy it.";
+          }
+        }
+      });
+    })();
+  </script>
+
+  <script>
+    import { registerSardrobeOverviewTool } from "../features/webmcp/homepageTool";
+
+    const unregisterOverviewTool = registerSardrobeOverviewTool();
+    window.addEventListener("pagehide", () => unregisterOverviewTool?.(), { once: true });
+  </script>
+</BaseLayout>

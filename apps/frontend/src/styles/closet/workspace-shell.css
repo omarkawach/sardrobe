@@ -1,0 +1,1192 @@
+/* Dashboard workspace redesign */
+.sr-only {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  border: 0;
+  white-space: nowrap;
+}
+
+.closet-workspace,
+.closet-dialog {
+  --closet-accent: var(--landing-accent);
+  --closet-panel: color-mix(in oklab, var(--landing-surface), white 58%);
+  --closet-panel-strong: color-mix(in oklab, var(--landing-surface), white 78%);
+  --closet-sidebar: color-mix(in oklab, var(--landing-accent), var(--landing-surface-strong) 38%);
+  --closet-sidebar-deep: color-mix(in oklab, var(--landing-accent), black 14%);
+  --closet-rule: color-mix(in oklab, var(--landing-line), var(--landing-ink) 18%);
+  --closet-raised-shadow: 0 0.8rem 1.8rem rgb(53 34 8 / 0.12);
+}
+
+.closet-workspace {
+  display: grid;
+  grid-template-columns: 12.25rem minmax(0, 1fr) auto;
+  min-block-size: 100dvh;
+  block-size: 100dvh;
+  padding: 0;
+  overflow: hidden;
+  color: var(--landing-ink);
+  background: var(--landing-background);
+}
+
+.closet-icon {
+  inline-size: 1.2rem;
+  block-size: 1.2rem;
+}
+
+.closet-sidebar {
+  display: grid;
+  grid-template-rows: auto minmax(0, auto) minmax(0, 1fr) auto;
+  gap: 1rem;
+  min-block-size: 0;
+  padding: 0.9rem 0.7rem;
+  color: var(--landing-surface);
+  background: linear-gradient(180deg, var(--closet-sidebar), var(--closet-sidebar-deep));
+  border-inline-end: 1px solid color-mix(in oklab, var(--landing-ink), transparent 72%);
+  box-shadow: 0.4rem 0 1.4rem rgb(53 34 8 / 0.16);
+  z-index: 4;
+}
+
+.closet-sidebar__brand,
+.closet-mobile-header,
+.closet-mobile-header > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.closet-sidebar__brand a,
+.closet-mobile-header a {
+  color: inherit;
+  font-family: var(--sardrobe-font-family-heading);
+  font-size: 1.5rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.closet-sidebar__brand button,
+.closet-mobile-header button {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 2.35rem;
+  block-size: 2.35rem;
+  padding: 0;
+  border: 1px solid color-mix(in oklab, currentColor, transparent 72%);
+  border-radius: 8px;
+  background: color-mix(in oklab, currentColor, transparent 88%);
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+.closet-sidebar__brand button:disabled {
+  cursor: default;
+  opacity: 0.62;
+}
+
+.closet-mobile-header .site-user-menu__trigger {
+  inline-size: 2.35rem;
+  block-size: 2.35rem;
+  min-block-size: 0;
+  padding: 0;
+  gap: 0;
+  border-radius: 9999px;
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  overflow: hidden;
+}
+
+.closet-mobile-header .site-user-menu__trigger:hover:not([data-disabled]),
+.closet-mobile-header .site-user-menu__trigger[data-popup-open] {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.closet-mobile-header .site-user-menu__avatar {
+  inline-size: 2.35rem;
+  block-size: 2.35rem;
+  width: 2.35rem;
+  height: 2.35rem;
+  box-shadow: none;
+}
+
+.closet-mobile-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.closet-mobile-header__icon {
+  position: relative;
+}
+
+.closet-mobile-header__icon--active {
+  background: color-mix(in oklab, currentColor, transparent 75%) !important;
+  border-color: color-mix(in oklab, currentColor, transparent 55%) !important;
+}
+
+.closet-mobile-header__badge {
+  position: absolute;
+  inset-block-start: -0.32rem;
+  inset-inline-end: -0.32rem;
+  display: inline-grid;
+  place-items: center;
+  min-inline-size: 1.05rem;
+  block-size: 1.05rem;
+  padding-inline: 0.28rem;
+  border-radius: 999px;
+  background: var(--closet-ink-strong, #2b1d09);
+  color: var(--landing-surface, #fff);
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.closet-sidebar__nav {
+  display: grid;
+  align-content: start;
+  gap: 0.26rem;
+  min-block-size: 0;
+  overflow-y: auto;
+  padding-block-start: 0.4rem;
+  border-block-start: 1px solid color-mix(in oklab, var(--landing-surface), transparent 72%);
+}
+
+.closet-nav-item,
+.closet-mobile-nav__item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-block-size: 2.35rem;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 760;
+  text-align: start;
+}
+
+.closet-nav-item {
+  padding: 0.42rem 0.5rem;
+}
+
+.closet-nav-item > span:first-child,
+.closet-mobile-nav__item > span:first-child {
+  display: grid;
+  place-items: center;
+  inline-size: 1.35rem;
+  block-size: 1.35rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, currentColor, transparent 62%);
+  font-size: 0.72rem;
+}
+
+.closet-nav-item--active {
+  background: color-mix(in oklab, var(--landing-surface), transparent 12%);
+  color: var(--landing-ink);
+}
+
+.closet-nav-item:disabled,
+.closet-mobile-nav__item:disabled {
+  cursor: default;
+  opacity: 0.58;
+}
+
+.closet-sidebar__account {
+  min-inline-size: 0;
+  padding-block-start: 0.55rem;
+  border-block-start: 1px solid color-mix(in oklab, var(--landing-surface), transparent 72%);
+}
+
+.closet-sidebar__account .site-user-menu__trigger {
+  inline-size: auto;
+  min-block-size: 3.2rem;
+  color: var(--landing-surface);
+  background: transparent;
+  box-shadow: none;
+}
+
+.closet-sidebar__account .site-user-menu__trigger:hover:not([data-disabled]),
+.closet-sidebar__account .site-user-menu__trigger[data-popup-open] {
+  background: color-mix(in oklab, var(--landing-surface), transparent 86%);
+}
+
+.closet-sidebar__account .site-user-menu__row {
+  color: var(--landing-surface);
+}
+
+.closet-sidebar__account .site-user-menu__email {
+  color: color-mix(in oklab, var(--landing-surface), transparent 20%);
+}
+
+.closet-app {
+  min-inline-size: 0;
+  min-block-size: 0;
+  overflow: hidden;
+}
+
+.closet-mobile-header,
+.closet-mobile-nav {
+  display: none;
+}
+
+.closet-library,
+.closet-import-view {
+  display: grid;
+  min-block-size: 0;
+  block-size: 100dvh;
+  overflow: hidden;
+  background: color-mix(in oklab, var(--landing-background), white 10%);
+}
+
+.closet-library {
+  grid-template-rows: minmax(0, 1fr);
+  padding: 0.85rem;
+}
+
+.closet-library__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-block-size: 3.75rem;
+}
+
+.closet-library h1,
+.closet-imports h1,
+.closet-outfits h1,
+.closet-draft-editor h2 {
+  margin: 0;
+  color: var(--landing-ink);
+  font-family: var(--sardrobe-font-family-heading);
+  font-size: 1.45rem;
+  font-weight: 750;
+  line-height: 1.12;
+}
+
+.closet-library__count {
+  display: inline-block;
+  margin-block-start: 0.22rem;
+  color: var(--landing-muted);
+  font-size: 0.9rem;
+  font-weight: 760;
+}
+
+.closet-library__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  min-inline-size: 0;
+}
+
+.closet-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  inline-size: min(34rem, 43vw);
+  min-inline-size: 18rem;
+}
+
+.closet-search .closet-icon {
+  position: absolute;
+  inset-inline-start: 0.68rem;
+  color: var(--landing-muted);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.closet-search .input {
+  inline-size: 100%;
+  min-block-size: 2.7rem;
+  padding-inline-start: 2.25rem;
+  border-color: rgb(53 34 8 / 0.28);
+  border-radius: 7px;
+  background: var(--closet-card-flat);
+  color: var(--closet-ink-strong);
+}
+
+.closet-groups {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+  min-block-size: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.1rem 0.25rem 2rem 0;
+  scrollbar-gutter: stable;
+}
+
+.closet-group {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.closet-group__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-inline: 0.2rem 0.45rem;
+}
+
+.closet-group__header h2 {
+  margin: 0;
+  color: var(--landing-ink);
+  font-size: 1rem;
+  font-weight: 850;
+  line-height: 1.2;
+}
+
+.closet-group__header span {
+  color: var(--landing-muted);
+  font-size: 0.82rem;
+  font-weight: 400;
+}
+
+.closet-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(7.25rem, 1fr));
+  gap: 0.58rem;
+  align-items: start;
+}
+
+.closet-item-card {
+  position: relative;
+  min-inline-size: 0;
+  overflow: hidden;
+  border: 1px solid var(--closet-rule);
+  border-radius: 8px;
+  background: var(--landing-surface);
+  box-shadow: 0 0.35rem 0.9rem rgb(53 34 8 / 0.08);
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
+}
+
+.closet-item-card:hover {
+  border-color: color-mix(in oklab, var(--closet-accent), var(--closet-rule) 28%);
+  box-shadow: var(--closet-raised-shadow);
+  transform: translateY(-1px);
+}
+
+.closet-item-card__open {
+  display: grid;
+  inline-size: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: start;
+}
+
+.closet-item-card__media {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 5.1;
+  overflow: hidden;
+  border-block-end: 1px solid var(--closet-rule);
+}
+
+.closet-item-card__media img {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: contain;
+  object-position: center;
+  padding: clamp(0.5rem, 6%, 0.82rem);
+}
+
+.closet-item-card__media span {
+  color: var(--landing-muted);
+  font-size: 0.82rem;
+}
+
+.closet-item-card__copy {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 0.45rem;
+  padding: 0.55rem 0.52rem;
+  background: color-mix(in oklab, var(--landing-surface), white 20%);
+}
+
+.closet-item-card__name {
+  display: block;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--landing-ink);
+  font-size: 0.82rem;
+  font-weight: 850;
+}
+
+.closet-import-view {
+  grid-template-columns: minmax(0, 1fr) minmax(22rem, 0.62fr);
+  gap: 0;
+  padding: 0.85rem;
+}
+
+.closet-imports,
+.closet-details {
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+.closet-imports {
+  grid-template-rows: auto auto auto auto minmax(0, 1fr);
+  border-radius: var(--sardrobe-border-radius-xl) 0 0 var(--sardrobe-border-radius-xl);
+}
+
+.closet-imports__header p {
+  max-inline-size: 42rem;
+  margin: 0.3rem 0 0;
+  color: var(--landing-muted);
+  line-height: 1.45;
+}
+
+.closet-imports__actions,
+.closet-draft-editor__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.closet-file-input {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.closet-process-status {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0.72rem 0.78rem;
+  border: 1px solid color-mix(in oklab, var(--closet-rule), var(--landing-ink) 20%);
+  border-radius: 8px;
+  background: var(--landing-surface);
+  color: var(--landing-muted);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.closet-process-status--empty {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  border: 0;
+  white-space: nowrap;
+}
+
+.closet-process-status__row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.closet-process-status__dot {
+  flex: 0 0 auto;
+  inline-size: 0.64rem;
+  block-size: 0.64rem;
+  margin-block-start: 0.25rem;
+  border-radius: 999px;
+  background: var(--closet-accent);
+  box-shadow: 0 0 0 0.28rem color-mix(in oklab, var(--closet-accent), transparent 82%);
+}
+
+.closet-process-status__copy {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.closet-process-status__label {
+  color: var(--landing-muted);
+  font-size: 0.7rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.closet-process-status__summary {
+  font-size: 0.82rem;
+}
+
+.closet-process-status--processing .closet-process-status__dot,
+.closet-process-status--saving .closet-process-status__dot {
+  animation: closet-status-pulse 1.2s ease-in-out infinite;
+}
+
+.closet-process-status--ready {
+  color: var(--landing-ink);
+}
+
+.closet-process-status--error {
+  border-color: color-mix(in oklab, var(--sardrobe-destructive-fill-mid), var(--closet-rule) 35%);
+  color: var(--sardrobe-destructive-text-colorful);
+}
+
+.closet-process-status__progress .progress__track {
+  block-size: 0.32rem;
+}
+
+.closet-draft-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.closet-draft-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-block-size: 2.25rem;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid var(--closet-rule);
+  border-radius: 999px;
+  background: var(--landing-surface);
+  color: var(--landing-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 850;
+}
+
+.closet-draft-filter > span:last-child {
+  display: grid;
+  place-items: center;
+  min-inline-size: 1.35rem;
+  min-block-size: 1.35rem;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--landing-surface-strong), white 35%);
+  color: var(--landing-ink);
+  font-size: 0.75rem;
+}
+
+.closet-draft-filter--active {
+  background: var(--closet-accent);
+  color: var(--landing-button-text);
+  border-color: var(--closet-accent);
+}
+
+.closet-draft-filter--active > span:last-child {
+  background: color-mix(in oklab, var(--landing-button-text), transparent 78%);
+  color: inherit;
+}
+
+.closet-draft-filter:disabled {
+  cursor: default;
+  opacity: 0.56;
+}
+
+.closet-draft-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8.2rem, 9.5rem));
+  grid-auto-rows: max-content;
+  gap: 0.62rem;
+  align-content: start;
+  overflow: visible;
+  padding-inline-end: 0.25rem;
+}
+
+.closet-draft-gallery--scrollable {
+  block-size: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.closet-draft-card {
+  display: grid;
+  overflow: hidden;
+  border: 1px solid var(--closet-rule);
+  border-radius: 8px;
+  background: var(--landing-surface);
+  box-shadow: 0 0.35rem 0.9rem rgb(53 34 8 / 0.08);
+}
+
+.closet-draft-card--selected {
+  border-color: var(--closet-accent);
+  box-shadow:
+    inset 0 0 0 2px color-mix(in oklab, var(--closet-accent), transparent 64%),
+    var(--closet-raised-shadow);
+}
+
+.closet-draft-card[data-status='failed'] {
+  border-color: color-mix(in oklab, var(--sardrobe-destructive-fill-mid), var(--closet-rule) 28%);
+}
+
+.closet-draft-card__select {
+  display: grid;
+  min-inline-size: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: start;
+}
+
+.closet-draft-card__media,
+.closet-preview--cutout img,
+.closet-item-card__media,
+.closet-dialog__media {
+  background:
+    linear-gradient(45deg, color-mix(in oklab, var(--landing-surface), white 48%) 25%, transparent 25%),
+    linear-gradient(-45deg, color-mix(in oklab, var(--landing-surface), white 48%) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, color-mix(in oklab, var(--landing-surface), white 48%) 75%),
+    linear-gradient(-45deg, transparent 75%, color-mix(in oklab, var(--landing-surface), white 48%) 75%),
+    var(--landing-surface);
+  background-size: 1.25rem 1.25rem;
+  background-position:
+    0 0,
+    0 0.625rem,
+    0.625rem -0.625rem,
+    -0.625rem 0;
+}
+
+.closet-draft-card__media {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 4.6;
+  overflow: hidden;
+  border-block-end: 1px solid var(--closet-rule);
+}
+
+.closet-draft-card__media img {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: contain;
+  padding: 0.5rem;
+}
+
+.closet-draft-card__body {
+  display: grid;
+  gap: 0.14rem;
+  padding: 0.55rem;
+}
+
+.closet-draft-card__name,
+.closet-draft-card__meta {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.closet-draft-card__name {
+  color: var(--landing-ink);
+  font-size: 0.84rem;
+  font-weight: 850;
+}
+
+.closet-draft-card__meta {
+  color: var(--landing-muted);
+  font-size: 0.78rem;
+}
+
+.closet-draft-card__actions {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0 0.55rem 0.55rem;
+}
+
+.closet-details {
+  grid-template-rows: auto;
+  grid-auto-rows: auto;
+  gap: 0.8rem;
+  align-content: start;
+  overflow-y: auto;
+  border-inline-start: 0;
+  border-radius: 0 var(--sardrobe-border-radius-xl) var(--sardrobe-border-radius-xl) 0;
+}
+
+.closet-draft-editor__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  min-inline-size: 0;
+}
+
+.closet-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.closet-preview {
+  display: grid;
+  gap: 0.42rem;
+  margin: 0;
+}
+
+.closet-preview img,
+.closet-preview > span {
+  inline-size: 100%;
+  aspect-ratio: 4 / 3;
+  border: 1px solid var(--closet-rule);
+  border-radius: 8px;
+  background-color: var(--landing-surface);
+}
+
+.closet-preview img {
+  object-fit: contain;
+  padding: 0.65rem;
+}
+
+.closet-preview > span {
+  display: grid;
+  place-items: center;
+  color: var(--landing-muted);
+}
+
+.closet-draft-editor__result {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid color-mix(in oklab, var(--closet-accent), var(--closet-rule) 42%);
+  border-radius: 8px;
+  background: var(--landing-surface);
+}
+
+.closet-draft-editor__result--error {
+  border-color: color-mix(in oklab, var(--sardrobe-destructive-fill-mid), var(--closet-rule) 28%);
+}
+
+.closet-dialog.dialog__popup {
+  inline-size: min(58rem, calc(100vw - 2rem));
+  max-inline-size: 58rem;
+  padding: 0;
+  border-radius: 8px;
+  background: var(--closet-panel-strong);
+  box-shadow:
+    0 1.4rem 4rem rgb(53 34 8 / 0.28),
+    0 0 0 1px var(--closet-rule);
+}
+
+.closet-dialog__topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1rem 0.85rem;
+  border-block-end: 1px solid var(--closet-rule);
+  background: color-mix(in oklab, var(--landing-surface), white 72%);
+}
+
+.closet-dialog__title {
+  margin: 0;
+  color: var(--landing-ink);
+  font-family: var(--sardrobe-font-family-heading);
+  font-size: 1.45rem;
+  line-height: 1.15;
+}
+
+.closet-dialog__description {
+  max-inline-size: 38rem;
+  margin: 0.3rem 0 0;
+  color: var(--landing-muted);
+  font-size: 0.92rem;
+}
+
+.closet-dialog__layout {
+  display: grid;
+  grid-template-columns: minmax(15rem, 0.78fr) minmax(0, 1.22fr);
+}
+
+.closet-dialog__media {
+  display: grid;
+  place-items: center;
+  min-block-size: 28rem;
+  border-inline-end: 1px solid var(--closet-rule);
+  overflow: hidden;
+}
+
+.closet-dialog__media img {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: contain;
+  padding: 1rem;
+}
+
+.closet-dialog__form {
+  display: grid;
+  align-content: start;
+  gap: 0.7rem;
+  padding: 1rem;
+}
+
+.closet-dialog__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  color: var(--landing-muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.closet-delete-confirm {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.75rem;
+  border: 1px solid color-mix(in oklab, var(--sardrobe-destructive-fill-mid), transparent 35%);
+  border-radius: 8px;
+  background: color-mix(in oklab, var(--sardrobe-destructive-fill-mid), white 88%);
+}
+
+.closet-delete-confirm > div,
+.closet-dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.55rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .closet-draft-card,
+  .closet-item-card {
+    transition: none;
+  }
+
+  .closet-draft-card:hover,
+  .closet-item-card:hover {
+    transform: none;
+  }
+
+  .closet-process-status__dot {
+    animation: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .closet-sidebar,
+  .closet-imports,
+  .closet-details,
+  .closet-item-card,
+  .closet-draft-card,
+  .closet-dialog.dialog__popup {
+    border: 1px solid CanvasText;
+    background: Canvas;
+    color: CanvasText;
+  }
+
+  .closet-nav-item--active,
+  .closet-mobile-nav__item--active,
+  .closet-draft-filter--active {
+    background: Highlight;
+    color: HighlightText;
+  }
+}
+
+@media (min-width: 92rem) {
+  .closet-grid {
+    grid-template-columns: repeat(auto-fill, minmax(7.75rem, 1fr));
+  }
+}
+
+@media (max-width: 62rem) {
+  .closet-workspace {
+    --closet-mobile-app-gap: 0.75rem;
+    --closet-mobile-nav-clearance: calc(5.75rem + env(safe-area-inset-bottom));
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr);
+    block-size: 100dvh;
+  }
+
+  .closet-sidebar {
+    display: none;
+  }
+
+  .closet-app {
+    box-sizing: border-box;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    row-gap: var(--closet-mobile-app-gap);
+    block-size: 100dvh;
+    min-block-size: 0;
+    padding-block-end: var(--closet-mobile-nav-clearance);
+    overflow: hidden;
+  }
+
+  .closet-mobile-header {
+    display: flex;
+    min-block-size: 4rem;
+    padding: 0.8rem 1rem;
+    color: var(--landing-ink);
+    background: color-mix(in oklab, var(--landing-background), white 22%);
+    border-block-end: 1px solid var(--closet-rule);
+    z-index: 6;
+  }
+
+  .closet-mobile-header a {
+    font-size: 1.8rem;
+  }
+
+  .closet-mobile-nav {
+    position: fixed;
+    inset: auto 0 0;
+    box-sizing: border-box;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    min-block-size: var(--closet-mobile-nav-clearance);
+    padding: 0.42rem 0.5rem calc(0.42rem + env(safe-area-inset-bottom));
+    background: color-mix(in oklab, var(--closet-sidebar), var(--landing-ink) 10%);
+    color: var(--landing-surface);
+    border-block-start: 1px solid color-mix(in oklab, var(--landing-surface), transparent 74%);
+    box-shadow: 0 -0.7rem 1.5rem rgb(53 34 8 / 0.18);
+    z-index: 18;
+  }
+
+  .closet-mobile-nav__item {
+    display: grid;
+    justify-items: center;
+    gap: 0.22rem;
+    min-block-size: 3.25rem;
+    padding: 0.25rem;
+    text-align: center;
+    font-size: 0.74rem;
+  }
+
+  .closet-mobile-nav__item > span:first-child {
+    inline-size: 1.5rem;
+    block-size: 1.5rem;
+  }
+
+  .closet-mobile-nav__item > span:last-child {
+    line-height: 1.1;
+  }
+
+  .closet-mobile-nav__item--active {
+    color: var(--landing-surface);
+    background: color-mix(in oklab, var(--landing-surface), transparent 84%);
+  }
+
+  .closet-library,
+  .closet-import-view {
+    block-size: auto;
+    min-block-size: 0;
+    padding: 0.75rem;
+    overflow: hidden;
+  }
+
+  .closet-library__header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    min-block-size: 0;
+    margin-block-end: 0;
+  }
+
+  .closet-library h1 {
+    display: none;
+  }
+
+  .closet-library__actions {
+    display: contents;
+  }
+
+  .closet-library__actions .closet-search {
+    display: none;
+  }
+
+  .closet-library__actions .closet-search--mobile-open {
+    display: flex;
+    grid-column: 1 / -1;
+    inline-size: 100%;
+    min-inline-size: 0;
+    margin-block-start: 0.6rem;
+  }
+
+  .closet-library__filter-button {
+    display: none;
+  }
+
+  .closet-groups {
+    padding-block-end: 1rem;
+  }
+
+  .closet-grid {
+    grid-template-columns: repeat(auto-fill, minmax(7.2rem, 1fr));
+    gap: 0.6rem;
+  }
+
+  .closet-import-view {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    overflow-y: auto;
+  }
+
+  .closet-import-mobile-switch {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.35rem;
+    padding: 0.25rem;
+    border: 1px solid var(--closet-rule);
+    border-radius: 8px;
+    background: var(--landing-surface);
+  }
+
+  .closet-import-mobile-switch__button {
+    min-block-size: 2.65rem;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--landing-muted);
+    cursor: pointer;
+    font: inherit;
+    font-weight: 850;
+  }
+
+  .closet-import-mobile-switch__button--active {
+    background: var(--landing-accent);
+    color: var(--landing-button-text);
+  }
+
+  .closet-imports,
+  .closet-details {
+    border-radius: 8px;
+    border: 1px solid var(--closet-rule);
+  }
+
+  .closet-imports {
+    grid-template-rows: auto auto auto auto auto;
+    overflow: visible;
+  }
+
+  .closet-composer--mobile-review .closet-imports,
+  .closet-composer--mobile-gallery .closet-draft-editor {
+    display: none;
+  }
+
+  .closet-draft-gallery {
+    grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
+  }
+
+  .closet-preview-grid,
+  .closet-details__row,
+  .closet-dialog__layout {
+    grid-template-columns: 1fr;
+  }
+
+  .closet-dialog__media {
+    min-block-size: 18rem;
+    border-inline-end: 0;
+    border-block-end: 1px solid var(--closet-rule);
+  }
+
+}
+
+@media (max-width: 42rem) {
+  .closet-mobile-header a {
+    font-size: 1.55rem;
+  }
+
+  .closet-library,
+  .closet-import-view {
+    padding-inline: 0.55rem;
+  }
+
+  .closet-library__actions {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .closet-filters-drawer__actions {
+    grid-template-columns: 1fr;
+  }
+
+  .closet-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .closet-draft-gallery {
+    grid-template-columns: 1fr;
+  }
+
+  .closet-draft-card__select {
+    grid-template-columns: 5.5rem minmax(0, 1fr);
+    align-items: center;
+  }
+
+  .closet-draft-card__media {
+    aspect-ratio: 1;
+    block-size: auto;
+    border-block-end: 0;
+    border-inline-end: 1px solid var(--closet-rule);
+  }
+
+  .closet-draft-card__body {
+    padding: 0.55rem 0.7rem;
+  }
+
+  .closet-draft-card__name {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    white-space: normal;
+    line-height: 1.22;
+  }
+
+  .closet-draft-card__actions {
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    padding: 0 0.55rem 0.55rem;
+  }
+
+  .closet-item-card__name {
+    font-size: 0.78rem;
+  }
+
+  .closet-imports__actions,
+  .closet-draft-editor__actions,
+  .closet-dialog__actions,
+  .closet-delete-confirm > div {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .closet-imports__actions .button {
+    inline-size: 100%;
+  }
+
+  .closet-draft-filters {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-block-end: 0.15rem;
+  }
+
+  .closet-draft-filter {
+    flex: 0 0 auto;
+  }
+
+  .closet-dialog.dialog__popup {
+    inline-size: calc(100vw - 1rem);
+    max-block-size: calc(100dvh - 1rem);
+  }
+}
+
+/* Wardrobe mockup fidelity and accessibility correction */

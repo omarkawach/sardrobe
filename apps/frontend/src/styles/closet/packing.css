@@ -1,0 +1,782 @@
+.closet-packing-view {
+  --site-scrollbar-track: var(--closet-panel-flat);
+  display: grid;
+  grid-template-columns: minmax(17rem, 0.34fr) minmax(0, 1fr);
+  gap: 0.85rem;
+  block-size: 100dvh;
+  min-block-size: 0;
+  overflow: hidden;
+  padding: 0.85rem;
+  background: var(--closet-panel-flat);
+}
+
+.closet-packing-mobile-switch {
+  display: none;
+}
+
+.closet-packing-list {
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.closet-packing-detail {
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+  align-content: start;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.closet-packing-detail--creating {
+  grid-template-rows: auto auto auto auto minmax(0, 1fr);
+}
+
+.closet-packing-detail--empty {
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.closet-packing__header,
+.closet-packing-detail__header,
+.closet-packing-section__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.closet-packing__header {
+  flex-wrap: wrap;
+}
+
+.closet-packing__header h1,
+.closet-packing-detail__header h2,
+.closet-packing-section__header h3,
+.closet-packing-add__title {
+  margin: 0;
+  color: var(--landing-ink);
+  font-family: var(--sardrobe-font-family-heading);
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.15;
+}
+
+.closet-packing__header h1,
+.closet-packing-detail__header h2 {
+  font-size: 1.45rem;
+}
+
+.closet-packing-title-edit {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-inline-size: 0;
+}
+
+.closet-packing-title-edit h2 {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.closet-packing-title-edit__button.button {
+  flex: 0 0 auto;
+  inline-size: 2rem;
+  min-block-size: 2rem;
+  border-radius: 7px;
+  color: var(--closet-ink-muted);
+}
+
+.closet-packing-title-edit__button.button:hover:not([data-disabled]) {
+  color: var(--closet-ink-strong);
+}
+
+.closet-packing-title-edit__field {
+  display: block;
+  inline-size: min(100%, 32rem);
+  min-inline-size: 0;
+}
+
+.closet-packing-title-edit__input.field__control {
+  block-size: 2.55rem;
+  padding-block: 0.3rem;
+  padding-inline: 0.52rem;
+  color: var(--landing-ink);
+  font-family: var(--sardrobe-font-family-heading);
+  font-size: 1.45rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.15;
+}
+
+.closet-packing-section__header h3,
+.closet-packing-add__title {
+  font-size: 1.15rem;
+}
+
+.closet-packing__count,
+.closet-packing-detail__header p,
+.closet-packing-plan-card__dates,
+.closet-packing-plan-card__meta,
+.closet-packing-section__header span,
+.closet-packing-row__meta,
+.closet-packing-section__empty,
+.closet-packing-detail__message,
+.closet-packing-status {
+  color: var(--closet-ink-muted);
+  font-family: var(--sardrobe-font-family-data);
+  font-size: 0.84rem;
+  font-stretch: 108%;
+  letter-spacing: 0;
+  line-height: 1.4;
+}
+
+.closet-packing__count,
+.closet-packing-detail__header p {
+  display: block;
+  margin: 0.28rem 0 0;
+}
+
+.closet-packing__new-button,
+.closet-packing-detail__actions .button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.closet-packing-plan-list,
+.closet-packing-checklist,
+.closet-packing-rows,
+.closet-packing-add__list {
+  display: grid;
+  align-content: start;
+  gap: 0.55rem;
+  min-block-size: 0;
+}
+
+.closet-packing-plan-list,
+.closet-packing-add__list {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.closet-packing-plan-list {
+  padding: 0.32rem 0.45rem 1rem;
+}
+
+.closet-packing-add__list {
+  padding-inline-end: 0.2rem;
+}
+
+.closet-packing-plan-card {
+  display: grid;
+  gap: 0.55rem;
+  inline-size: 100%;
+  min-inline-size: 0;
+  padding: 0.72rem;
+  border: var(--closet-hairline) solid var(--closet-rule);
+  border-radius: 8px;
+  background: var(--closet-card-flat);
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: start;
+  transition:
+    background-color var(--closet-transition-duration) var(--closet-transition-easing),
+    border-color var(--closet-transition-duration) var(--closet-transition-easing),
+    transform var(--closet-transition-duration) var(--closet-transition-easing);
+}
+
+.closet-packing-plan-card:hover {
+  background: rgb(255 255 255 / 0.95);
+  border-color: color-mix(in oklab, var(--closet-ink-strong), transparent 55%);
+  transform: translateY(-1px);
+}
+
+.closet-packing-plan-card--active {
+  border-color: color-mix(in oklab, var(--closet-ink-strong), transparent 42%);
+  background: rgb(255 255 255 / 0.96);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklab, var(--closet-ink-strong), transparent 38%),
+    0 0.35rem 0.85rem rgb(36 35 31 / 0.08);
+}
+
+.closet-packing-plan-card:focus-visible {
+  outline: 0;
+  box-shadow: var(--closet-focus);
+}
+
+.closet-packing-plan-card--active:focus-visible {
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklab, var(--closet-ink-strong), transparent 38%),
+    var(--closet-focus);
+}
+
+.closet-packing-plan-card__main {
+  display: grid;
+  gap: 0.16rem;
+  min-inline-size: 0;
+}
+
+.closet-packing-plan-card__title,
+.closet-packing-row__title {
+  display: block;
+  min-inline-size: 0;
+  overflow: hidden;
+  color: var(--landing-ink);
+  font-family: var(--sardrobe-font-family-data);
+  font-size: 0.9rem;
+  font-weight: 560;
+  letter-spacing: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.closet-packing-plan-card__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.closet-packing-detail__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.55rem;
+}
+
+.closet-packing-detail__meta {
+  display: grid;
+  align-content: start;
+  gap: 0.85rem;
+}
+
+.closet-packing-detail__message,
+.closet-packing-status {
+  min-block-size: 1.2rem;
+  margin: 0;
+}
+
+.closet-packing-status {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  min-block-size: 0;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.closet-packing-detail__message--error {
+  color: var(--sardrobe-destructive-text-colorful);
+}
+
+.closet-packing-date-input {
+  position: relative;
+  padding-inline-end: 2.7rem;
+}
+
+.closet-packing-date-input::-webkit-calendar-picker-indicator {
+  position: absolute;
+  inset-inline-end: 0.82rem;
+  inline-size: 1.15rem;
+  block-size: 1.15rem;
+  margin: 0;
+  cursor: pointer;
+}
+
+.closet-packing-checklist {
+  gap: 0.9rem;
+  padding-block-start: 0.25rem;
+  border-block-start: var(--closet-hairline) solid var(--closet-rule);
+}
+
+.closet-packing-section {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.closet-packing-section__header {
+  align-items: center;
+  padding-block-end: 0.35rem;
+  border-block-end: var(--closet-hairline) solid var(--closet-rule);
+}
+
+.closet-packing-section__titlebar {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-inline-size: 0;
+}
+
+.closet-packing-section__titlebar h3 {
+  min-inline-size: 0;
+}
+
+.closet-packing-section__add.button {
+  flex: 0 0 auto;
+  inline-size: 1.9rem;
+  min-block-size: 1.9rem;
+  border-color: transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--closet-ink-muted);
+}
+
+.closet-packing-section__add.button:hover:not([data-disabled]) {
+  border-color: color-mix(in oklab, var(--sardrobe-primary-fill-mid), black 16%);
+  background: var(--sardrobe-primary-fill-mid);
+  color: var(--landing-button-text);
+}
+
+.closet-packing-row {
+  display: grid;
+  grid-template-columns: auto 4.2rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.65rem;
+  min-block-size: 4.65rem;
+  padding: 0.55rem;
+  border: var(--closet-hairline) solid var(--closet-rule);
+  border-radius: 8px;
+  background: var(--closet-card-flat);
+}
+
+.closet-packing-row--packed .closet-packing-row__title {
+  color: var(--closet-ink-muted);
+  text-decoration: line-through;
+}
+
+.closet-packing-row__preview {
+  display: grid;
+  place-items: center;
+  inline-size: 4.2rem;
+  block-size: 3.8rem;
+  overflow: hidden;
+  border: var(--closet-hairline) solid var(--closet-rule);
+  border-radius: 7px;
+  background:
+    linear-gradient(45deg, color-mix(in oklab, var(--landing-surface), white 48%) 25%, transparent 25%),
+    linear-gradient(-45deg, color-mix(in oklab, var(--landing-surface), white 48%) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, color-mix(in oklab, var(--landing-surface), white 48%) 75%),
+    linear-gradient(-45deg, transparent 75%, color-mix(in oklab, var(--landing-surface), white 48%) 75%),
+    var(--landing-surface);
+  background-size: 1rem 1rem;
+  background-position:
+    0 0,
+    0 0.5rem,
+    0.5rem -0.5rem,
+    -0.5rem 0;
+}
+
+.closet-packing-row__preview img {
+  display: block;
+  box-sizing: border-box;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: contain;
+  object-position: center;
+  padding: 0.22rem;
+}
+
+.closet-packing-row__preview > span {
+  color: var(--closet-ink-muted);
+  font-size: 0.72rem;
+  text-align: center;
+}
+
+.closet-packing-row__preview--outfit {
+  container-type: inline-size;
+  background: var(--closet-card-flat);
+}
+
+.closet-packing-row__preview--outfit .closet-builder__canvas-wrap,
+.closet-packing-row__preview--outfit .closet-builder__canvas {
+  inline-size: 100%;
+  block-size: 100%;
+  min-block-size: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.closet-packing-row__preview--outfit .closet-builder__canvas {
+  --piece-h-top: clamp(2rem, 42cqi, 3rem);
+  --piece-h-outerwear: clamp(2rem, 42cqi, 3rem);
+  --piece-h-bottom: clamp(2.35rem, 48cqi, 3.35rem);
+  --piece-h-bag: clamp(1rem, 22cqi, 1.55rem);
+  --piece-h-shoes: clamp(0.9rem, 18cqi, 1.3rem);
+  --piece-h-belt: clamp(0.75rem, 16cqi, 1.1rem);
+  --piece-h-accessories: clamp(0.9rem, 18cqi, 1.3rem);
+}
+
+.closet-packing-row__body {
+  display: grid;
+  gap: 0.1rem;
+  min-inline-size: 0;
+}
+
+.closet-packing-add-dialog.dialog__popup,
+.closet-packing-add-drawer.drawer__popup {
+  --closet-card-flat: #ffffff;
+  --closet-panel-flat: #f7f7f5;
+  --closet-ink-strong: var(--landing-ink, #24231f);
+  --closet-ink-muted: var(--landing-muted, #66635d);
+  --closet-rule: rgb(36 35 31 / 0.12);
+  --closet-rule-strong: rgb(36 35 31 / 0.18);
+  color: var(--closet-ink-strong);
+}
+
+.closet-packing-add-dialog.dialog__popup {
+  inline-size: min(44rem, calc(100vw - 2rem));
+  max-inline-size: 44rem;
+  max-block-size: min(42rem, calc(100dvh - 2rem));
+  padding: 0;
+  border: 1px solid var(--closet-rule);
+  border-radius: 8px;
+  background-color: var(--closet-card-flat);
+  box-shadow:
+    0 1.4rem 4rem rgb(36 35 31 / 0.18),
+    0 0 0 1px rgb(255 255 255 / 0.75);
+  overflow: hidden;
+}
+
+.closet-packing-add__topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1rem 0.85rem;
+  border-block-end: 1px solid var(--closet-rule);
+  background: rgb(255 255 255 / 0.94);
+}
+
+.closet-packing-add__close {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  inline-size: 2.2rem;
+  block-size: 2.2rem;
+  padding: 0;
+  border: 1px solid var(--closet-rule);
+  border-radius: 7px;
+  background: var(--closet-card-flat);
+  color: var(--closet-ink-strong);
+  cursor: pointer;
+}
+
+.closet-packing-add__close:hover {
+  border-color: var(--closet-rule-strong);
+  background: color-mix(in oklab, var(--closet-card-flat), var(--closet-panel-flat) 58%);
+}
+
+.closet-packing-add__close:focus-visible {
+  outline: 0;
+  box-shadow: var(--closet-focus, 0 0 0 2px rgb(36 35 31 / 0.2));
+}
+
+.closet-packing-add__content {
+  display: grid;
+  min-block-size: 0;
+  padding: 1rem;
+  background-color: var(--closet-card-flat);
+  color: var(--closet-ink-strong);
+}
+
+.closet-packing-add,
+.closet-packing-add-drawer__content {
+  display: grid;
+  gap: 0.75rem;
+  min-block-size: 0;
+  background-color: var(--closet-card-flat);
+  color: var(--closet-ink-strong);
+}
+
+.closet-packing-add__search {
+  inline-size: 100%;
+  min-inline-size: 0;
+}
+
+.closet-packing-add__search svg {
+  position: absolute;
+  inset-inline-start: 0.68rem;
+  color: var(--closet-ink-muted);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.closet-packing-add__search .input {
+  padding-inline-start: 2.25rem;
+  border-color: var(--closet-rule);
+  background-color: var(--closet-card-flat);
+}
+
+.closet-packing-add__list {
+  display: grid;
+  align-items: start;
+  gap: 0.7rem;
+  max-block-size: min(34rem, calc(100dvh - 12rem));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-inline-end: 0.15rem;
+}
+
+.closet-packing-add__list--items {
+  grid-template-columns: 1fr;
+}
+
+.closet-packing-add__list--outfits {
+  grid-template-columns: 1fr;
+}
+
+.closet-packing-add__empty {
+  grid-column: 1 / -1;
+}
+
+.closet-packing-add-row {
+  display: grid;
+  grid-template-columns: 8.5rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.8rem;
+  min-inline-size: 0;
+  min-block-size: 9.35rem;
+  padding: 0.55rem;
+  border: var(--closet-hairline) solid var(--closet-rule);
+  border-radius: 8px;
+  background: var(--closet-card-flat);
+}
+
+.closet-packing-add-row__preview {
+  display: grid;
+  place-items: center;
+  inline-size: 100%;
+  block-size: 8.25rem;
+  min-inline-size: 0;
+  overflow: hidden;
+  border-radius: 7px;
+  background: var(--closet-paper);
+}
+
+.closet-packing-add-row__image {
+  display: block;
+  box-sizing: border-box;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: contain;
+  object-position: center;
+  padding: 0.15rem;
+}
+
+.closet-packing-add-row__preview > span {
+  color: var(--closet-ink-muted);
+  font-size: 0.78rem;
+  text-align: center;
+}
+
+.closet-packing-add-row__preview--outfit {
+  container-type: size;
+  block-size: 10.8rem;
+  background: var(--closet-card-flat);
+}
+
+.closet-packing-add-row__preview--outfit .closet-builder__canvas-wrap,
+.closet-packing-add-row__preview--outfit .closet-builder__canvas {
+  inline-size: 100%;
+  block-size: 100%;
+  min-block-size: 0;
+  max-inline-size: none;
+  max-block-size: none;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.closet-packing-add-row__preview--outfit .closet-builder__canvas {
+  --piece-h-top: 28.5cqh;
+  --piece-h-outerwear: 28.5cqh;
+  --piece-h-bottom: 34.5cqh;
+  --piece-h-bag: 12.75cqh;
+  --piece-h-shoes: 10.5cqh;
+  --piece-h-belt: 9cqh;
+  --piece-h-accessories: 10.5cqh;
+}
+
+.closet-packing-add-row__body {
+  display: grid;
+  gap: 0.18rem;
+  min-inline-size: 0;
+}
+
+.closet-packing-add-row__title {
+  min-inline-size: 0;
+  overflow: hidden;
+  color: var(--closet-ink-strong);
+  font-size: 0.9rem;
+  font-weight: 750;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.closet-packing-add-row__meta {
+  min-block-size: 1.15rem;
+  overflow: hidden;
+  color: var(--closet-ink-muted);
+  font-size: 0.82rem;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.closet-packing-add-row__action.button {
+  justify-content: center;
+  min-inline-size: 5.3rem;
+  min-block-size: 2.35rem;
+}
+
+.closet-packing-add-drawer {
+  max-block-size: 88dvh;
+  border-radius: 16px 16px 0 0;
+  background-color: var(--closet-card-flat);
+}
+
+.closet-packing-add-drawer__content {
+  padding: 0;
+  border: 1px solid var(--closet-rule);
+  border-block-end: 0;
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -1rem 2.5rem rgb(36 35 31 / 0.18);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .closet-packing-plan-card {
+    transition-duration: 1ms;
+  }
+
+  .closet-packing-plan-card:hover {
+    transform: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .closet-packing-plan-card,
+  .closet-packing-row,
+  .closet-packing-add-row,
+  .closet-packing-add-row__preview,
+  .closet-packing-add-dialog.dialog__popup {
+    border: 1px solid CanvasText;
+    background: Canvas;
+    color: CanvasText;
+  }
+}
+
+@media (max-width: 62rem) {
+  .closet-packing-view {
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    block-size: 100%;
+    max-block-size: 100%;
+    min-block-size: 0;
+    overflow: hidden;
+    padding: 0 0.75rem 0.75rem;
+  }
+
+  .closet-packing-mobile-switch {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.35rem;
+    padding: 0.25rem;
+    border: var(--closet-hairline) solid var(--closet-rule);
+    border-radius: 8px;
+    background: var(--closet-card-flat);
+  }
+
+  .closet-packing-mobile-switch__button {
+    min-block-size: 2.65rem;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--landing-muted);
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+  }
+
+  .closet-packing-mobile-switch__button--active {
+    background: var(--sardrobe-primary-fill-mid);
+    color: var(--landing-button-text);
+  }
+
+  .closet-packing-view--mobile-checklist .closet-packing-list,
+  .closet-packing-view--mobile-plans .closet-packing-detail {
+    display: none;
+  }
+
+  .closet-packing-list,
+  .closet-packing-detail {
+    block-size: 100%;
+    min-block-size: 0;
+    overflow: hidden;
+  }
+
+  .closet-packing-plan-list {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-block-end: 1rem;
+  }
+
+  .closet-packing-detail {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scroll-padding-block: 1rem;
+  }
+
+  .closet-packing-view--mobile-checklist .closet-packing-section:last-of-type {
+    padding-block-end: 1.5rem;
+  }
+}
+
+@media (max-width: 42rem) {
+.closet-packing__header,
+.closet-packing-detail__header,
+.closet-packing-detail__actions {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.closet-packing__new-button,
+.closet-packing-detail__actions .button {
+  inline-size: 100%;
+  justify-content: center;
+}
+
+  .closet-packing-row {
+    grid-template-columns: auto 3.6rem minmax(0, 1fr) auto;
+    gap: 0.5rem;
+  }
+
+  .closet-packing-row__preview {
+    inline-size: 3.6rem;
+    block-size: 3.4rem;
+  }
+
+  .closet-packing-add-row {
+    grid-template-columns: 6.5rem minmax(0, 1fr) auto;
+    gap: 0.5rem;
+    min-block-size: 7.7rem;
+  }
+
+  .closet-packing-add-row__preview {
+    block-size: 6.6rem;
+  }
+
+  .closet-packing-add-row__preview--outfit {
+    block-size: 8.4rem;
+  }
+}

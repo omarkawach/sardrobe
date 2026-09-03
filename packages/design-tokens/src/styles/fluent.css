@@ -1,0 +1,43 @@
+/*
+ * Fluent UI Style Preset
+ *
+ * Subtle radii, compact density, Segoe UI, restrained elevation.
+ * Pairs well with the Blue or Sky color presets.
+ */
+
+.sardrobe-style-fluent {
+  /* Shape: restrained, professional */
+/* 2px */
+  --sardrobe-border-radius-sm: 0.25rem; /* 4px */
+  --sardrobe-border-radius-md: 0.25rem; /* 4px */
+  --sardrobe-border-radius-lg: 0.5rem; /* 8px */
+  --sardrobe-border-radius-xl: 0.75rem; /* 12px */
+
+  /* Shadows: restrained, ambient + key light */
+  --sardrobe-shadow-soft: 0 1.6px 3.6px rgb(0 0 0 / 0.13), 0 0.3px 0.9px rgb(0 0 0 / 0.11);
+  --sardrobe-shadow-mid: 0 3.2px 7.2px rgb(0 0 0 / 0.13), 0 0.6px 1.8px rgb(0 0 0 / 0.11);
+
+  /* Typography */
+  --sardrobe-font-family: 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif;
+  --sardrobe-font-weight-semibold: 600;
+  --sardrobe-font-weight-bold: 700;
+
+  /* Controls: compact density */
+  --sardrobe-form-control-height-xs: 1.5rem;
+  --sardrobe-form-control-height-sm: 1.75rem;
+  --sardrobe-form-control-height-md: 2rem;
+  --sardrobe-form-control-height-lg: 2.5rem;
+  --sardrobe-form-control-height-xl: 3rem;
+  --sardrobe-form-control-font-size-sm: 0.8125rem;
+  --sardrobe-form-control-font-size-md: 0.875rem;
+  --sardrobe-form-control-font-size-lg: 1rem;
+
+  /* Borders */
+  --sardrobe-border-width: 1px;
+
+  /* Focus: thick bottom-accent style */
+  --sardrobe-focus-width: 2px;
+  --sardrobe-focus-offset: 1px;
+
+  /* Interaction */
+}

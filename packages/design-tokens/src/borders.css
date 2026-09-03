@@ -1,0 +1,18 @@
+/*
+ * Border Tokens
+ */
+
+:root,
+.sardrobe-light,
+.sardrobe-dark,
+[data-theme='light'],
+[data-theme='dark'] {
+  --sardrobe-border-style: solid;
+  --sardrobe-border-width: 1px;
+/* 3px */
+  --sardrobe-border-radius-sm: 0.25rem; /* 4px */
+  --sardrobe-border-radius-md: 0.375rem; /* 6px */
+  --sardrobe-border-radius-lg: 0.5625rem; /* 9px */
+  --sardrobe-border-radius-xl: 0.75rem; /* 12px */
+  --sardrobe-border-radius-pill: 9999px;
+}

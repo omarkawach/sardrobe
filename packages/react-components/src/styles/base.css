@@ -1,0 +1,81 @@
+/*
+ * Base Styles
+ * Global styles and font loading for the design system
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+body {
+  font-family: var(--sardrobe-font-family);
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--sardrobe-text-body);
+  background-color: var(--sardrobe-background-color);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code,
+kbd,
+samp,
+pre {
+  font-family: var(--sardrobe-font-family-code);
+}
+
+button,
+[role='button'],
+input,
+select,
+textarea,
+a {
+  touch-action: manipulation;
+}
+
+::selection {
+  background-color: var(--sardrobe-selection-background-color);
+  color: var(--sardrobe-selection-color);
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --sardrobe-neutral-stroke-soft: var(--sardrobe-neutral-600);
+    --sardrobe-neutral-stroke-softer: var(--sardrobe-neutral-500);
+    --sardrobe-neutral-fill-softer: var(--sardrobe-neutral-200);
+  }
+}
+
+@media (forced-colors: active) {
+  :focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+
+  [data-disabled],
+  :disabled {
+    border-color: GrayText;
+    color: GrayText;
+  }
+}

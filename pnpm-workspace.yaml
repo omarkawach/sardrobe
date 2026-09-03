@@ -1,0 +1,46 @@
+packages:
+  - 'apps/*'
+  - 'packages/*'
+
+catalog:
+  # Storybook
+  '@astrojs/check': ^0.9.10
+  '@astrojs/react': ^6.0.4
+
+  # Testing
+  '@axe-core/playwright': ^4.13.0
+  '@base-ui/react': ~1.7.0
+  '@chromatic-com/storybook': ^5.0.2
+  '@playwright/test': ^1.62.1
+
+  # Observability
+  '@sentry/astro': ^10.71.0
+  '@sentry/cloudflare': ^10.71.0
+  '@storybook/addon-a11y': ^10.5.10
+  '@storybook/addon-docs': ^10.5.10
+  '@storybook/addon-vitest': ^10.5.10
+  '@storybook/react': ^10.5.10
+  '@storybook/react-vite': ^10.5.10
+
+  # Build tooling
+  '@types/node': ^26.4.0
+  '@types/react': ^19.2.18
+  '@types/react-dom': ^19.2.5
+  '@vitest/browser-playwright': ^4.1.11
+  '@vitest/coverage-v8': ^4.1.11
+  '@vitest/mocker': ^4.1.11
+  esbuild: ^0.28.1
+
+  # Frontend
+  astro: ^7.2.9
+
+  # Backend
+  hono: ^4.13.5
+  playwright: ^1.62.1
+  react: ^19.2.8
+  react-dom: ^19.2.8
+  storybook: ^10.5.10
+  tsup: ^8.5.1
+  typescript: ^6.0.3
+  vite: ^8.2.2
+  vitest: ^4.1.11

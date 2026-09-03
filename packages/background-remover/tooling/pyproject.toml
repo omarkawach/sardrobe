@@ -1,0 +1,20 @@
+[project]
+name = "sardrobe-background-remover-tooling"
+version = "0.0.0"
+description = "Export and validation tooling for the Sardrobe DIS ISNet ONNX model."
+# Pinned to 3.11/3.12 — the ML wheels (torch, onnxruntime, onnxsim) lag the
+# newest CPython, and uv would otherwise grab e.g. 3.14 and fail to resolve.
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "torch>=2.1",
+    "onnx>=1.15",
+    "onnxscript>=0.1",  # required by torch.onnx.export's exporter machinery
+    "onnxruntime>=1.17",
+    "onnxconverter-common>=1.14",
+    "numpy>=1.26",
+    "onnxsim>=0.4",  # optional graph simplification
+]
+
+# This tooling is run with `uv run <script>.py`; uv resolves these deps into an
+# isolated environment on demand. The package's JS runtime does not use any of
+# this — it is maintainer-only model-release tooling.

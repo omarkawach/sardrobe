@@ -1,0 +1,38 @@
+---
+import BaseLayout from "./BaseLayout.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+
+interface Props {
+  title: string;
+  description: string;
+  heading: string;
+  updated: string;
+}
+
+const { title, description, heading, updated } = Astro.props;
+const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url).toString();
+---
+
+<BaseLayout title={title} description={description} canonical={canonicalUrl}>
+  <div class="landing-page">
+    <header class="site-header">
+      <div class="site-header__inner">
+        <a class="site-logo" href="/">Sardrobe</a>
+      </div>
+    </header>
+
+    <main id="main-content" class="legal">
+      <article class="legal__inner">
+        <div class="legal__header">
+          <h1 class="legal__title">{heading}</h1>
+          <p class="legal__updated">Last updated: {updated}</p>
+        </div>
+        <div class="legal__body">
+          <slot />
+        </div>
+      </article>
+    </main>
+
+    <SiteFooter />
+  </div>
+</BaseLayout>

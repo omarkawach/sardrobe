@@ -1,0 +1,16 @@
+@layer vendor, app, utilities;
+
+@import "@sardrobe/react-components/styles" layer(vendor);
+@import "./base/tokens.css" layer(app);
+@import "./base/base.css" layer(app);
+@import "./site/site.css" layer(app);
+@import "./site/legal.css" layer(app);
+@import "./closet/legacy-workspace.css" layer(app);
+@import "./closet/workspace-shell.css" layer(app);
+@import "./closet/wardrobe.css" layer(app);
+@import "./closet/import.css" layer(app);
+@import "./closet/shared-refinement.css" layer(app);
+@import "./closet/outfits.css" layer(app);
+@import "./closet/packing.css" layer(app);
+@import "./closet/outfit-builder.css" layer(app);
+@import "./closet/local-ai.css" layer(app);

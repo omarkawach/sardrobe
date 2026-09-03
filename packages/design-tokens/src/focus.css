@@ -1,0 +1,12 @@
+/*
+ * Focus Tokens
+ */
+
+:root,
+.sardrobe-light,
+.sardrobe-dark,
+[data-theme='light'],
+[data-theme='dark'] {
+  --sardrobe-focus-width: 3px;
+  --sardrobe-focus-offset: 1px;
+}

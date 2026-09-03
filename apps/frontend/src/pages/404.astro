@@ -1,0 +1,37 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+
+const canonicalUrl = new URL("/", Astro.site ?? Astro.url).toString();
+---
+
+<BaseLayout
+  title="Page not found | Sardrobe"
+  description="The page you're looking for isn't hanging here. Head back to your wardrobe."
+  canonical={canonicalUrl}
+  noindex
+>
+  <div class="landing-page">
+    <header class="site-header">
+      <div class="site-header__inner">
+        <a class="site-logo" href="/">Sardrobe</a>
+      </div>
+    </header>
+
+    <main id="main-content" class="landing">
+      <section class="not-found">
+        <p class="not-found__code">404</p>
+        <h1 class="not-found__title">This hanger is empty.</h1>
+        <p class="not-found__summary">
+          The page you're looking for has been moved, removed, or never made it
+          into the closet. Let's get you back to something that fits.
+        </p>
+        <div class="not-found__actions">
+          <a class="not-found__action" href="/">Back to home</a>
+        </div>
+      </section>
+    </main>
+
+    <SiteFooter />
+  </div>
+</BaseLayout>

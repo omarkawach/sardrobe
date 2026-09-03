@@ -1,0 +1,25 @@
+/*
+ * Typography Tokens
+ */
+
+:root,
+.sardrobe-light,
+.sardrobe-dark,
+[data-theme='light'],
+[data-theme='dark'] {
+  --sardrobe-font-family: system-ui, sans-serif;
+  --sardrobe-font-family-heading: var(--sardrobe-font-family);
+  --sardrobe-font-family-code:
+    SFMono-Regular, Consolas, Menlo, Monaco, 'liberation mono', 'Courier New', monospace;
+
+  /* Type scale */
+
+  /* Fluid type scale */
+
+  --sardrobe-font-weight-semibold: 500;
+  --sardrobe-font-weight-bold: 700;
+
+  /* Line heights */
+
+  /* Letter spacing */
+}

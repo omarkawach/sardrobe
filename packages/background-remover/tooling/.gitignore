@@ -1,0 +1,13 @@
+# uv-managed virtual environment (recreated by `uv run` / `uv sync`)
+.venv/
+
+# Model weights (large; provided by the maintainer, never committed) and the
+# generated export artifacts (model + manifest are published to R2, not git).
+*.pth
+*.onnx
+*.onnx.data
+build/
+
+# uv keeps a lockfile for reproducible exports — that IS committed (see below);
+# this file only excludes the heavy/derived artifacts above.
+!uv.lock

@@ -1,0 +1,35 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "sardrobe",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-08-22",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "run_worker_first": true
+  },
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    "APP_ENV": "production",
+    "PUBLIC_APP_URL": "",
+    "SENTRY_DSN": ""
+  },
+  "secrets": {
+    "required": []
+  },
+  "r2_buckets": [
+    {
+      "binding": "MODEL_ASSETS",
+      "bucket_name": "sardrobe-models"
+    }
+  ],
+  "services": [
+    {
+      "binding": "BACKEND_SERVICE",
+      "service": "sardrobe-backend"
+    }
+  ]
+}

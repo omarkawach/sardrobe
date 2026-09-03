@@ -1,0 +1,1374 @@
+import { useEffect, useRef } from 'react'
+import { deleteWardrobeItem, fetchWardrobeItem, fetchWardrobeItems, updateWardrobeItem } from '../wardrobe/api'
+import {
+  COLORS,
+  OCCASIONS,
+  SEASONS,
+  SUBCATEGORIES_BY_CATEGORY,
+  arrayToCsv,
+  categories,
+  csvToArray,
+  type CreateItemResponse,
+  type ImportDraft,
+  type ImportDraftStatus,
+  type WardrobeFormState,
+  type WardrobeItem,
+} from '../wardrobe/domain'
+import { draftImageUrl } from '../wardrobe/import-processing'
+import { createOutfit, deleteOutfit, listOutfits, updateOutfit } from '../outfits/api'
+import { clampUnit, legacyPositionFor, wardrobeCategoryToRole, type CreateOutfitItemPayload, type CreateOutfitPayload, type Outfit, type OutfitItem, type OutfitRole } from '../outfits/domain'
+import {
+  addPackingItems,
+  addPackingOutfits,
+  createPackingPlan,
+  deletePackingPlan,
+  fetchPackingPlan,
+  listPackingPlans,
+  reconcilePackedStatus,
+  removePackingItem,
+  removePackingOutfit,
+  togglePackingItem,
+  togglePackingOutfit,
+  updatePackingPlan,
+} from '../packing/api'
+import type { PackingPlan, PackingPlanFormState, PackingPlanStatus } from '../packing/domain'
+import type { WorkspaceUser } from '../wardrobe/WorkspaceNavigation'
+
+type ItemUpdateFields = Partial<Pick<WardrobeFormState, 'name' | 'category' | 'subcategory' | 'color' | 'description' | 'occasion' | 'season' | 'notes'>>
+
+type UseSardrobeWebMcpToolsOptions = {
+  applyItemUpdate: (item: WardrobeItem) => void
+  drafts: ImportDraft[]
+  revealImportDraft: (draftId: string) => void
+  revealImportDraftList: () => void
+  revealOutfitDelete: (outfitId: string) => void
+  revealOutfitUpdate: (outfit: Outfit, mode: 'created' | 'updated') => void
+  revealPackingPlanDelete: (planId: string) => void
+  revealPackingPlanUpdate: (plan: PackingPlan, mode: 'created' | 'updated') => void
+  refreshItems: () => Promise<void>
+  removeDraft: (draftId: string) => void
+  removeItem: (itemId: string) => void
+  saveDraftById: (draftId: string, options?: { refresh?: boolean; quiet?: boolean }) => Promise<CreateItemResponse['item'] | null>
+  updateDraftForm: (draftId: string, key: keyof WardrobeFormState, value: string) => void
+  user: WorkspaceUser
+}
+
+const outfitRoles: readonly OutfitRole[] = ['top', 'bottom', 'outerwear', 'shoes', 'bag', 'belt', 'accessories']
+const packingStatuses: readonly PackingPlanStatus[] = ['planning', 'packed']
+
+const agentOutfitZIndex: Record<OutfitRole, number> = {
+  bag: 0,
+  bottom: 100,
+  shoes: 200,
+  outerwear: 250,
+  top: 300,
+  belt: 500,
+  accessories: 600,
+}
+
+const itemUpdateKeys = ['name', 'category', 'subcategory', 'color', 'description', 'occasion', 'season', 'notes'] as const
+
+// Status filter values for the import_drafts schema, kept in sync with
+// ImportDraftStatus in wardrobe/domain.ts. Typing the entries as
+// ImportDraftStatus makes a removed or renamed status a compile error here;
+// when adding a new status to the union, add it to this list too.
+const importDraftStatuses: readonly ImportDraftStatus[] = ['queued', 'processing', 'ready', 'failed', 'saving']
+
+const imageFormats = ['image/webp', 'image/jpeg', 'image/png'] as const
+type ImageFormat = (typeof imageFormats)[number]
+
+// Flat list of every controlled subcategory across all categories. Used as the
+// schema enum so an agent cannot invent values (e.g. "collarless jacket"). The
+// per-category cross-check in parseItemUpdateArgs still rejects valid-but-
+// mismatched pairs (e.g. Tops + Jacket); both derive from SUBCATEGORIES_BY_CATEGORY.
+const allSubcategories: readonly string[] = Array.from(new Set(Object.values(SUBCATEGORIES_BY_CATEGORY).flat()))
+
+// Registers Sardrobe directly against the WebMCP API implemented by compatible
+// browsers. Unsupported browsers simply do not expose document.modelContext.
+//
+// Rules of Hooks: each tool is its own useWebMcpTool call in a fixed order. Handlers
+// read live app state through optionsRef so the closures never go stale, while
+// the tool list itself stays static across renders.
+export function useSardrobeWebMcpTools(options: UseSardrobeWebMcpToolsOptions) {
+  const optionsRef = useRef(options)
+  optionsRef.current = options
+  const get = () => optionsRef.current
+
+  // --- Wardrobe ---
+
+  useWebMcpTool({
+    name: 'wardrobe_items',
+    title: 'Read wardrobe items',
+    description:
+      'Read closet items. action "list" returns all items the signed-in user owns (with optional search and a metadata-gap filter); action "get" returns one item by id. Output carries metadata provenance, derived roles, media references, and metadata gaps. To see an item visually, call wardrobe_item_image.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        action: { type: 'string', enum: ['list', 'get'], description: 'list = all items; get = one item by id.' },
+        itemId: { type: 'string', description: 'Required for action "get".' },
+        query: { type: 'string', description: 'list only: case-insensitive search across name, category, subcategory, color, description, occasion, season, and notes.' },
+        missingOnly: { type: 'boolean', description: 'list only: when true, only return items with metadata gaps.' },
+        limit: { type: 'number', description: 'list only: maximum items to return. Defaults to 100.' },
+      },
+      required: ['action'],
+      additionalProperties: false,
+    } as const,
+    annotations: { readOnlyHint: true, untrustedContentHint: true },
+    handler: async (args) => {
+      const action = readAction(args, ['list', 'get'] as const)
+
+      if (action === 'get') {
+        const item = await fetchWardrobeItem(requiredString(args.itemId, 'itemId'))
+        return { kind: 'wardrobe.item_detail', item: serializeAgentWardrobeItem(item) }
+      }
+
+      const query = optionalString(args.query).toLowerCase()
+      const limit = boundedLimit(args.limit, 100, 500)
+      const missingOnly = args.missingOnly === true
+
+      const items = await fetchWardrobeItems()
+      if (!items) throw new ToolCallError('Could not load wardrobe items.', 'request_failed')
+
+      const filtered = items
+        .filter((item) => !query || searchableItemText(item).includes(query))
+        .map(serializeAgentWardrobeItem)
+        .filter((item) => !missingOnly || item.metadataGaps.length > 0)
+        .slice(0, limit)
+
+      return { kind: 'wardrobe.item_list', authenticatedUser: safeUser(get().user), count: filtered.length, items: filtered }
+    },
+  })
+
+  // The image tools return MCP-compatible content blocks so browser agents can
+  // inspect authenticated or browser-local images without public image URLs.
+  useImageTools(get)
+
+  useWebMcpTool({
+    name: 'wardrobe_item_mutate',
+    title: 'Change a wardrobe item',
+    description:
+      'Change one wardrobe item. action "update" saves title and metadata directly (no confirmation); action "delete" permanently removes the item and its cutout and requires confirm: true. For update, only set fields you are changing; fields.title is an alias for fields.name. Category, subcategory, color, occasion, and season must use the allowed values, and subcategory must belong to the chosen category. Inspect wardrobe_item_image before guessing visual attributes; do not invent values. Returns the updated item.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        action: { type: 'string', enum: ['update', 'delete'], description: 'update = save metadata; delete = remove permanently.' },
+        itemId: { type: 'string', description: 'Wardrobe item ID.' },
+        fields: itemUpdateFieldsSchema(),
+        confirm: { type: 'boolean', description: 'Required true for action "delete".' },
+      },
+      required: ['action', 'itemId'],
+      additionalProperties: false,
+    } as const,
+    annotations: { readOnlyHint: false, untrustedContentHint: true },
+    handler: async (args) => {
+      const action = readAction(args, ['update', 'delete'] as const)
+      const itemId = requiredString(args.itemId, 'itemId')
+
+      if (action === 'delete') {
+        if (args.confirm !== true) throw new ToolCallError('Set confirm: true to permanently delete this item.', 'confirmation_required')
+        await deleteWardrobeItem(itemId)
+        get().removeItem(itemId)
+        return { kind: 'wardrobe.item_deleted', itemId }
+      }
+
+      const current = await fetchWardrobeItem(itemId)
+      // Validate subcategory against the saved category when the update does not
+      // change it, so a subcategory-only edit is still checked against the right list.
+      const fields = parseItemFields(args.fields, current.category)
+
+      const form: WardrobeFormState = {
+        name: current.name,
+        category: current.category,
+        subcategory: current.subcategory ?? '',
+        color: current.color ?? '',
+        description: current.description ?? '',
+        occasion: current.occasion ?? '',
+        season: current.season ?? '',
+        status: current.status,
+        notes: current.notes ?? '',
+        ...fields,
+      }
+
+      const item = await updateWardrobeItem(itemId, form)
+      get().applyItemUpdate(item)
+      return { kind: 'wardrobe.item_updated', item: serializeAgentWardrobeItem(item) }
+    },
+  })
+
+  // --- Import drafts (browser-local) ---
+
+  useWebMcpTool({
+    name: 'import_drafts',
+    title: 'Read import drafts',
+    description:
+      'Read browser-local import drafts (in-progress uploads for the current tab session). action "list" returns all drafts (optionally filtered by status); action "get" returns one draft by id with image references, processing errors, editable metadata, save readiness, and metadata gaps. To see a draft visually, call import_draft_image (the draft image URLs are browser-local and not viewable as plain references).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        action: { type: 'string', enum: ['list', 'get'], description: 'list = all drafts; get = one draft by id.' },
+        draftId: { type: 'string', description: 'Required for action "get".' },
+        status: { type: 'string', enum: importDraftStatuses, description: 'list only: optional status filter.' },
+      },
+      required: ['action'],
+      additionalProperties: false,
+    } as const,
+    annotations: { readOnlyHint: true, untrustedContentHint: true },
+    handler: (args) => {
+      const action = readAction(args, ['list', 'get'] as const)
+
+      if (action === 'get') {
+        const draftId = requiredString(args.draftId, 'draftId')
+        const draft = get().drafts.find((candidate) => candidate.id === draftId)
+        if (!draft) throw new ToolCallError('Import draft not found in this browser session.', 'not_found')
+        return { kind: 'imports.draft_detail', draft: serializeAgentImportDraft(draft) }
+      }
+
+      const status = optionalString(args.status)
+      const drafts = get()
+        .drafts.filter((draft) => !status || draft.status === status)
+        .map(serializeAgentImportDraft)
+      return { kind: 'imports.draft_list', count: drafts.length, drafts }
+    },
+  })
+
+  useWebMcpTool({
+    name: 'import_draft_mutate',
+    title: 'Change an import draft',
+    description:
+      'Change a browser-local import draft. action "update" edits its title and metadata fields in place (no confirmation). action "submit" saves a ready draft as a wardrobe item and requires confirm: true. action "discard" removes the draft and requires confirm: true. For update, fields.title is an alias for fields.name; controlled vocabulary matches wardrobe_item_mutate.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        action: { type: 'string', enum: ['update', 'submit', 'discard'], description: 'update = edit fields; submit = save as wardrobe item; discard = remove draft.' },
+        draftId: { type: 'string', description: 'Import draft ID.' },
+        fields: itemUpdateFieldsSchema(),
+        confirm: { type: 'boolean', description: 'Required true for "submit" and "discard".' },
+      },
+      required: ['action', 'draftId'],
+      additionalProperties: false,
+    } as const,
+    annotations: { readOnlyHint: false, untrustedContentHint: true },
+    handler: async (args) => {
+      const action = readAction(args, ['update', 'submit', 'discard'] as const)
+      const draftId = requiredString(args.draftId, 'draftId')
+      const draft = get().drafts.find((candidate) => candidate.id === draftId)
+      if (!draft) throw new ToolCallError('Import draft not found in this browser session.', 'not_found')
+
+      if (action === 'discard') {
+        if (args.confirm !== true) throw new ToolCallError('Set confirm: true to discard this draft.', 'confirmation_required')
+        get().removeDraft(draftId)
+        get().revealImportDraftList()
+        return { kind: 'imports.draft_discarded', draftId }
+      }
+
+      if (action === 'submit') {
+        if (args.confirm !== true) throw new ToolCallError('Set confirm: true to save this draft as a wardrobe item.', 'confirmation_required')
+        if (draft.status !== 'ready') throw new ToolCallError(`Draft is not ready to save (status: ${draft.status}).`, 'invalid_state')
+        const savedItem = await get().saveDraftById(draftId, { refresh: false })
+        if (!savedItem) throw new ToolCallError('Could not save this draft. Check its readiness and required fields.', 'request_failed')
+        try {
+          get().applyItemUpdate(await fetchWardrobeItem(savedItem.id))
+        } catch {
+          await get().refreshItems()
+        }
+        // Return the created wardrobe item id (and a light summary) so the agent
+        // does not have to search the closet to find what it just saved.
+        return { kind: 'imports.draft_submitted', draftId, itemId: savedItem.id, item: savedItem }
+      }
+
+      // update: validate against the draft's current category and apply per field.
+      const fields = parseItemFields(args.fields, draft.form.category)
+      for (const key of itemUpdateKeys) {
+        if (fields[key] !== undefined) get().updateDraftForm(draftId, key, fields[key])
+      }
+      get().revealImportDraft(draftId)
+      return { kind: 'imports.draft_updated', draftId, fields }
+    },
+  })
+
+  // --- Outfits ---
+
+  useWebMcpTool({
+    name: 'outfits',
+    title: 'Read outfits',
+    description: 'Read saved outfits. action "list" returns all outfits; action "get" returns one by id. Output includes item ids, roles, placement metadata, outfit metadata, gaps, and same-origin media URLs. To see the composed look, call outfit_image.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        action: { type: 'string', enum: ['list', 'get'], description: 'list = all outfits; get = one outfit by id.' },
+        outfitId: { type: 'string', description: 'Required for action "get".' },
+      },
+      required: ['action'],
+      additionalProperties: false,
+    } as const,
+    annotations: { readOnlyHint: true, untrustedContentHint: true },
+    handler: async (args) => {
+      const action = readAction(args, ['list', 'get'] as const)
+
+      if (action === 'get') {
+        const outfitId = requiredString(args.outfitId, 'outfitId')
+        const payload = await requestJson<{ outfit: Outfit }>(`/api/outfits/${encodeURIComponent(outfitId)}`)
+        return { kind: 'outfits.detail', outfit: serializeAgentOutfit(payload.outfit) }
+      }
+
+      const outfits = await listOutfits()
+      if ('error' in outfits) throw new ToolCallError(outfits.error, 'request_failed')
+      return { kind: 'outfits.list', count: outfits.length, outfits: outfits.map(serializeAgentOutfit) }
+    },
+  })
+
+  useWebMcpTool({
+    name: 'outfit_mutate',
+    title: 'Change an outfit',
+    description:
+      'Create, update, or delete an outfit. action "create" and "update" save directly; update replaces the whole item composition, so replacing a non-empty outfit requires confirm: true. action "delete" requires confirm: true. items is the full composition: each entry needs itemId (one of your wardrobe items) and role (one of the outfit roles); placement (x, y, scale, rotation, zIndex) is optional and defaults to a sensible layout. occasion and season are arrays of allowed values. Returns the saved outfit.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        action: { type: 'string', enum: ['create', 'update', 'delete'], description: 'create = new outfit; update = replace fields and composition; delete = remove.' },
+        outfitId: { type: 'string', description: 'Required for "update" and "delete".' },
+        name: { type: 'string', description: 'Outfit name (required for create/update).' },
+        description: { type: 'string' },
+        notes: { type: 'string' },
+        occasion: { type: 'array', items: { type: 'string', enum: OCCASIONS }, description: 'Zero or more occasions from the allowed list.' },
+        season: { type: 'array', items: { type: 'string', enum: SEASONS }, description: 'Zero or more seasons from the allowed list.' },
+        items: {
+          type: 'array',
+          description: 'Full outfit composition. Replaces the existing items on update. At least one item is required for create/update. Omit placement fields to use Sardrobe role-aware flat-lay defaults.',
+          items: {
+            type: 'object',
+            properties: {
+              itemId: { type: 'string', description: 'A wardrobe item ID you own.' },
+              role: { type: 'string', enum: outfitRoles, description: 'Outfit role for this piece.' },
+              x: { type: 'number', description: 'Optional normalized 0..1 horizontal center. Omit for a role-aware default.' },
+              y: { type: 'number', description: 'Optional normalized 0..1 vertical center. Omit for a role-aware default.' },
+              scale: { type: 'number', description: 'Optional scale multiplier (default 1).' },
+              rotation: { type: 'number', description: 'Optional rotation in degrees (default 0).' },
+              zIndex: { type: 'number', description: 'Optional stacking order. Omit for Sardrobe default layering.' },
+            },
+            required: ['itemId', 'role'],
+            additionalProperties: false,
+          },
+        },
+        confirm: { type: 'boolean', description: 'Required true for delete and for replacing a non-empty outfit composition.' },
+      },
+      required: ['action'],
+      additionalProperties: false,
+    } as const,
+    annotations: { readOnlyHint: false, untrustedContentHint: true },
+    handler: async (args) => {
+      const action = readAction(args, ['create', 'update', 'delete'] as const)
+
+      if (action === 'delete') {
+        const outfitId = requiredString(args.outfitId, 'outfitId')
+        if (args.confirm !== true) throw new ToolCallError('Set confirm: true to delete this outfit.', 'confirmation_required')
+        const result = await deleteOutfit(outfitId)
+        if ('error' in result) throw new ToolCallError(result.error, 'request_failed')
+        get().revealOutfitDelete(outfitId)
+        return { kind: 'outfits.deleted', outfitId }
+      }
+
+      const payload = buildOutfitPayload(args)
+
+      if (action === 'create') {
+        const created = await createOutfit(payload)
+        if ('error' in created) throw new ToolCallError(created.error, 'request_failed')
+        get().revealOutfitUpdate(created, 'created')
+        return { kind: 'outfits.created', outfit: serializeAgentOutfit(created) }
+      }
+
+      // update: replacing a non-empty composition is effectively destructive of
+      // the prior layout, so gate it behind confirm.
+      const outfitId = requiredString(args.outfitId, 'outfitId')
+      const existing = await requestJson<{ outfit: Outfit }>(`/api/outfits/${encodeURIComponent(outfitId)}`)
+      if (existing.outfit.items.length > 0 && args.confirm !== true) {
+        throw new ToolCallError('This outfit already has items; set confirm: true to replace its composition.', 'confirmation_required')
+      }
+
+      const updated = await updateOutfit(outfitId, payload)
+      if ('error' in updated) throw new ToolCallError(updated.error, 'request_failed')
+      get().revealOutfitUpdate(updated, 'updated')
+      return { kind: 'outfits.updated', outfit: serializeAgentOutfit(updated) }
+    },
+  })
+
+  // --- Packing plans ---
+
+  useWebMcpTool({
+    name: 'packing_plans',
+    title: 'Read packing plans',
+    description: 'Read packing plans. action "list" returns plan summaries with checklist counts, dates, status, and notes; action "get" returns one plan by id with outfit rows, wardrobe item rows, packed state, and same-origin media URLs.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        action: { type: 'string', enum: ['list', 'get'], description: 'list = all plans; get = one plan by id.' },
+        planId: { type: 'string', description: 'Required for action "get".' },
+      },
+      required: ['action'],
+      additionalProperties: false,
+    } as const,
+    annotations: { readOnlyHint: true, untrustedContentHint: true },
+    handler: async (args) => {
+      const action = readAction(args, ['list', 'get'] as const)
+
+      if (action === 'get') {
+        const plan = await fetchPackingPlan(requiredString(args.planId, 'planId'))
+        if ('error' in plan) throw new ToolCallError(plan.error, 'request_failed')
+        return {
+          kind: 'packing.plan_detail',
+          plan: {
+            ...plan,
+            outfits: plan.outfits.map((row) => ({ ...row, outfit: serializeAgentOutfit(row.outfit) })),
+            items: plan.items.map((row) => ({ ...row, item: serializeAgentWardrobeItem(row.item) })),
+          },
+        }
+      }
+
+      const plans = await listPackingPlans()
+      if ('error' in plans) throw new ToolCallError(plans.error, 'request_failed')
+      return { kind: 'packing.plan_list', count: plans.length, plans }
+    },
+  })
+
+  useWebMcpTool({
+    name: 'packing_plan_mutate',
+    title: 'Change a packing plan',
+    description:
+      'Create, update, change membership, or pack a packing plan. Actions: "create" (new plan, may seed outfitIds/itemIds), "update" (metadata: name, dates, status, notes), "delete" (confirm: true), "add_outfits"/"add_items" (add by outfit/item id), "remove_outfit"/"remove_item" (by rowId, from packing_plans get), "set_outfit_packed"/"set_item_packed" (toggle a row\'s packed state by rowId). Packed state auto-reconciles plan status: when every row is packed the plan becomes "packed", otherwise "planning" — so prefer set_*_packed over setting status by hand. Dates are ISO yyyy-mm-dd; end date cannot precede start date. Returns the updated plan.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        action: {
+          type: 'string',
+          enum: ['create', 'update', 'delete', 'add_outfits', 'add_items', 'remove_outfit', 'remove_item', 'set_outfit_packed', 'set_item_packed'],
+          description: 'The mutation to perform.',
+        },
+        planId: { type: 'string', description: 'Required for every action except create.' },
+        name: { type: 'string', description: 'Plan name (required for create).' },
+        startDate: { type: 'string', description: 'create/update: optional ISO yyyy-mm-dd start date.' },
+        endDate: { type: 'string', description: 'create/update: optional ISO yyyy-mm-dd end date.' },
+        status: { type: 'string', enum: packingStatuses, description: 'create/update: plan status. Usually let set_*_packed manage this.' },
+        notes: { type: 'string', description: 'create/update: notes.' },
+        outfitIds: { type: 'array', items: { type: 'string' }, description: 'create (seed) or add_outfits: outfit ids to include.' },
+        itemIds: { type: 'array', items: { type: 'string' }, description: 'create (seed) or add_items: wardrobe item ids to include.' },
+        rowId: { type: 'string', description: 'Membership-row id (from packing_plans get) for remove_* and set_*_packed.' },
+        packed: { type: 'boolean', description: 'Target packed state for set_outfit_packed / set_item_packed.' },
+        confirm: { type: 'boolean', description: 'Required true for delete.' },
+      },
+      required: ['action'],
+      additionalProperties: false,
+    } as const,
+    annotations: { readOnlyHint: false, untrustedContentHint: true },
+    handler: async (args) => {
+      const action = readAction(
+        args,
+        ['create', 'update', 'delete', 'add_outfits', 'add_items', 'remove_outfit', 'remove_item', 'set_outfit_packed', 'set_item_packed'] as const,
+      )
+
+      if (action === 'create') {
+        const form = buildPackingForm(args, true)
+        const rows = { outfitIds: optionalStringArray(args.outfitIds, 'outfitIds'), itemIds: optionalStringArray(args.itemIds, 'itemIds') }
+        const created = await createPackingPlan(form, rows)
+        if ('error' in created) throw new ToolCallError(created.error, 'request_failed')
+        get().revealPackingPlanUpdate(created, 'created')
+        return { kind: 'packing.created', plan: created }
+      }
+
+      const planId = requiredString(args.planId, 'planId')
+
+      switch (action) {
+        case 'delete': {
+          if (args.confirm !== true) throw new ToolCallError('Set confirm: true to delete this packing plan.', 'confirmation_required')
+          const result = await deletePackingPlan(planId)
+          if ('error' in result) throw new ToolCallError(result.error, 'request_failed')
+          get().revealPackingPlanDelete(planId)
+          return { kind: 'packing.deleted', planId }
+        }
+        case 'update': {
+          const form = buildPackingForm(args, false)
+          const updated = await updatePackingPlan(planId, form)
+          if ('error' in updated) throw new ToolCallError(updated.error, 'request_failed')
+          get().revealPackingPlanUpdate(updated, 'updated')
+          return { kind: 'packing.updated', plan: updated }
+        }
+        case 'add_outfits':
+          return packingResult('packing.outfits_added', await reconcilePlanResult(await addPackingOutfits(planId, requireStringArray(args.outfitIds, 'outfitIds'))), (plan) => get().revealPackingPlanUpdate(plan, 'updated'))
+        case 'add_items':
+          return packingResult('packing.items_added', await reconcilePlanResult(await addPackingItems(planId, requireStringArray(args.itemIds, 'itemIds'))), (plan) => get().revealPackingPlanUpdate(plan, 'updated'))
+        case 'remove_outfit':
+          return packingResult('packing.outfit_removed', await reconcilePlanResult(await removePackingOutfit(planId, requiredString(args.rowId, 'rowId'))), (plan) => get().revealPackingPlanUpdate(plan, 'updated'))
+        case 'remove_item':
+          return packingResult('packing.item_removed', await reconcilePlanResult(await removePackingItem(planId, requiredString(args.rowId, 'rowId'))), (plan) => get().revealPackingPlanUpdate(plan, 'updated'))
+        case 'set_outfit_packed':
+          return packingResult('packing.outfit_packed', await reconcilePlanResult(await togglePackingOutfit(planId, requiredString(args.rowId, 'rowId'), readBoolean(args.packed, 'packed'))), (plan) => get().revealPackingPlanUpdate(plan, 'updated'))
+        case 'set_item_packed':
+          return packingResult('packing.item_packed', await reconcilePlanResult(await togglePackingItem(planId, requiredString(args.rowId, 'rowId'), readBoolean(args.packed, 'packed'))), (plan) => get().revealPackingPlanUpdate(plan, 'updated'))
+      }
+    },
+  })
+}
+
+type SardrobeWebMcpTool = Omit<WebMCP.ModelContextTool, 'execute'> & {
+  handler: WebMCP.ToolExecuteCallback
+}
+
+// WebMCP unregisters tools when the registration signal is aborted. Keeping the
+// handler in a ref lets each static tool definition read current React state.
+function useWebMcpTool({ handler, ...definition }: SardrobeWebMcpTool) {
+  const handlerRef = useRef(handler)
+  handlerRef.current = handler
+  const definitionRef = useRef(definition)
+
+  useEffect(() => {
+    const modelContext = document.modelContext
+    if (!modelContext) return undefined
+
+    const controller = new AbortController()
+    const tool: WebMCP.ModelContextTool = {
+      ...definitionRef.current,
+      execute: (args, options) => handlerRef.current(args, options),
+    }
+
+    void modelContext.registerTool(tool, { signal: controller.signal }).catch((error) => {
+      if (!controller.signal.aborted) console.warn(`Could not register WebMCP tool ${tool.name}.`, error)
+    })
+
+    return () => controller.abort()
+  }, [])
+}
+
+// Membership and packed-state changes return the updated plan; reconcile its
+// status against the rows (all packed -> packed, otherwise planning) so the
+// WebMCP path matches the UI's auto-status behavior. Adding an unpacked row to a
+// fully-packed plan correctly flips it back to planning.
+async function reconcilePlanResult(result: PackingPlan | { error: string }): Promise<PackingPlan | { error: string }> {
+  if ('error' in result) return result
+  return reconcilePackedStatus(result)
+}
+
+function packingResult(kind: string, result: PackingPlan | { error: string }, reveal?: (plan: PackingPlan) => void) {
+  if ('error' in result) throw new ToolCallError(result.error, 'request_failed')
+  reveal?.(result)
+  return { kind, plan: result }
+}
+
+const imageToolInputSchema = {
+  type: 'object',
+  properties: {
+    itemId: { type: 'string', description: 'Wardrobe item ID.' },
+    maxWidth: { type: 'number', description: 'Longest-edge downscale target in pixels. Defaults to 768; capped at 2048. The image is only scaled down, never up.' },
+    format: { type: 'string', enum: imageFormats, description: 'Output image MIME type. Defaults to image/webp.' },
+  },
+  required: ['itemId'],
+  additionalProperties: false,
+} as const
+
+const outfitImageToolInputSchema = {
+  type: 'object',
+  properties: {
+    outfitId: { type: 'string', description: 'Outfit ID.' },
+    maxWidth: { type: 'number', description: 'Canvas width in pixels (height is 1.25x for a 4:5 portrait). Defaults to 768; capped at 1536.' },
+    format: { type: 'string', enum: imageFormats, description: 'Output image MIME type. Defaults to image/webp.' },
+  },
+  required: ['outfitId'],
+  additionalProperties: false,
+} as const
+
+const draftImageToolInputSchema = {
+  type: 'object',
+  properties: {
+    draftId: { type: 'string', description: 'Import draft ID.' },
+    maxWidth: { type: 'number', description: 'Longest-edge downscale target in pixels. Defaults to 768; capped at 2048. The image is only scaled down, never up.' },
+    format: { type: 'string', enum: imageFormats, description: 'Output image MIME type. Defaults to image/webp.' },
+  },
+  required: ['draftId'],
+  additionalProperties: false,
+} as const
+
+// Register all image tools together and remove them as a group on unmount.
+function useImageTools(get: () => UseSardrobeWebMcpToolsOptions) {
+  // Keep a stable ref to the accessor so the registration effect can run once
+  // (empty deps) while the draft image tool still reads live draft state.
+  const getRef = useRef(get)
+  getRef.current = get
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return undefined
+
+    const modelContext = document.modelContext
+    if (!modelContext?.registerTool) return undefined
+
+    const controller = new AbortController()
+
+    const registrations = [modelContext.registerTool(
+      {
+        name: 'wardrobe_item_image',
+        title: 'Get a wardrobe item image',
+        description:
+          "Fetch a wardrobe item's authenticated same-origin cutout image and return it as inline image content for visual inspection. Use this before suggesting color or description metadata. The item media URL alone is not viewable outside the authenticated browser session.",
+        inputSchema: imageToolInputSchema,
+        annotations: { readOnlyHint: true },
+        execute: (args: Record<string, unknown> = {}) => executeGetItemImage(args),
+      },
+      { signal: controller.signal },
+    )]
+
+    registrations.push(modelContext.registerTool(
+      {
+        name: 'outfit_image',
+        title: 'Get an outfit image',
+        description:
+          'Render an outfit as a single composited image: every item cutout is layered onto one canvas using its placement, scale, rotation, and z-index, matching how the outfit looks in the app. Use this to see a whole look at once instead of fetching each piece. Returns inline image content.',
+        inputSchema: outfitImageToolInputSchema,
+        annotations: { readOnlyHint: true },
+        execute: (args: Record<string, unknown> = {}) => executeGetOutfitImage(args),
+      },
+      { signal: controller.signal },
+    ))
+
+    registrations.push(modelContext.registerTool(
+      {
+        name: 'import_draft_image',
+        title: 'Get an import draft image',
+        description:
+          "Fetch a browser-local import draft's image (its cutout if processed, otherwise the source upload) and return it as inline image content for visual review before saving the draft. Use this to confirm what a draft shows before editing its metadata or submitting it.",
+        inputSchema: draftImageToolInputSchema,
+        annotations: { readOnlyHint: true },
+        execute: (args: Record<string, unknown> = {}) => executeGetDraftImage(args, getRef.current().drafts),
+      },
+      { signal: controller.signal },
+    ))
+
+    void Promise.all(registrations).catch((error) => {
+      if (!controller.signal.aborted) console.warn('Could not register Sardrobe image tools.', error)
+    })
+
+    return () => controller.abort()
+  }, [])
+}
+
+async function executeGetItemImage(args: Record<string, unknown>): Promise<{ content: Array<{ type: string; [key: string]: unknown }> }> {
+  const itemId = requiredString(args.itemId, 'itemId')
+  const maxWidth = boundedLimit(args.maxWidth, 768, 2048)
+  const format = imageFormats.includes(args.format as ImageFormat) ? (args.format as ImageFormat) : 'image/webp'
+
+  const item = await fetchWardrobeItem(itemId)
+  if (!item.media) {
+    throw new ToolCallError('This item has no saved cutout image.', 'missing_media')
+  }
+
+  // Same-origin, session-gated bytes (see backend /api/wardrobe/media/:id), so
+  // the canvas is not tainted and toBlob works.
+  const response = await fetch(item.media.url, { credentials: 'include' })
+  if (!response.ok) {
+    throw new ToolCallError(`Could not load item image (status ${response.status}).`, response.status === 401 ? 'authentication_required' : 'request_failed')
+  }
+
+  const { blob, width, height } = await downscaleImage(await response.blob(), maxWidth, format)
+  const data = await blobToBase64(blob)
+
+  return {
+    content: [
+      {
+        type: 'text',
+        text: JSON.stringify({ kind: 'wardrobe.item_image', itemId, mediaId: item.media.id, width, height, mimeType: format }),
+      },
+      { type: 'image', mimeType: format, data },
+    ],
+  }
+}
+
+async function executeGetDraftImage(args: Record<string, unknown>, drafts: ImportDraft[]): Promise<{ content: Array<{ type: string; [key: string]: unknown }> }> {
+  const draftId = requiredString(args.draftId, 'draftId')
+  const maxWidth = boundedLimit(args.maxWidth, 768, 2048)
+  const format = imageFormats.includes(args.format as ImageFormat) ? (args.format as ImageFormat) : 'image/webp'
+
+  const draft = drafts.find((candidate) => candidate.id === draftId)
+  if (!draft) throw new ToolCallError('Import draft not found in this browser session.', 'not_found')
+
+  // Browser-local blob/object URL: cutout if processed, else the source upload.
+  const url = draftImageUrl(draft)
+  if (!url) throw new ToolCallError('This draft has no viewable image yet.', 'missing_media')
+
+  const response = await fetch(url)
+  if (!response.ok) throw new ToolCallError(`Could not load draft image (status ${response.status}).`, 'request_failed')
+
+  const { blob, width, height } = await downscaleImage(await response.blob(), maxWidth, format)
+  const data = await blobToBase64(blob)
+
+  return {
+    content: [
+      {
+        type: 'text',
+        text: JSON.stringify({ kind: 'imports.draft_image', draftId, source: draft.cutout ? 'cutout' : 'original', width, height, mimeType: format }),
+      },
+      { type: 'image', mimeType: format, data },
+    ],
+  }
+}
+
+// Per-role piece heights as a fraction of canvas height, mirroring the UI's
+// container-query units (--piece-h-* in cqh, outfit-builder.css). Width follows
+// each cutout's intrinsic aspect ratio. This keeps the composite faithful to
+// what the user sees in the builder.
+const OUTFIT_PIECE_HEIGHT_FRACTION: Record<OutfitRole, number> = {
+  top: 0.285,
+  outerwear: 0.285,
+  bottom: 0.345,
+  bag: 0.1275,
+  shoes: 0.105,
+  belt: 0.09,
+  accessories: 0.105,
+}
+
+async function executeGetOutfitImage(args: Record<string, unknown>): Promise<{ content: Array<{ type: string; [key: string]: unknown }> }> {
+  const outfitId = requiredString(args.outfitId, 'outfitId')
+  // Canvas defaults to a 4:5 portrait, matching the builder stage aspect.
+  const canvasWidth = boundedLimit(args.maxWidth, 768, 1536)
+  const canvasHeight = Math.round(canvasWidth * 1.25)
+  const format = imageFormats.includes(args.format as ImageFormat) ? (args.format as ImageFormat) : 'image/webp'
+
+  const payload = await requestJson<{ outfit: Outfit }>(`/api/outfits/${encodeURIComponent(outfitId)}`)
+  const pieces = payload.outfit.items.filter((item) => item.media)
+  if (pieces.length === 0) {
+    throw new ToolCallError('This outfit has no items with saved images to composite.', 'missing_media')
+  }
+
+  const canvas = document.createElement('canvas')
+  canvas.width = canvasWidth
+  canvas.height = canvasHeight
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new ToolCallError('Could not get a 2D canvas context to composite the outfit.', 'image_encode_failed')
+
+  // Draw back-to-front by zIndex, matching OutfitCanvas.
+  const ordered = [...pieces].sort((a, b) => a.zIndex - b.zIndex)
+  let drawn = 0
+  for (const piece of ordered) {
+    const bitmap = await loadOutfitPieceBitmap(piece)
+    if (!bitmap) continue
+    try {
+      const targetH = OUTFIT_PIECE_HEIGHT_FRACTION[piece.role] * canvasHeight * piece.scale
+      const targetW = targetH * (bitmap.width / bitmap.height)
+      // Backend leaves x/y null when the user never positioned a piece; fall back
+      // to centered so the composite still renders something sensible.
+      const cx = (piece.x ?? 0.5) * canvasWidth
+      const cy = (piece.y ?? 0.5) * canvasHeight
+
+      ctx.save()
+      ctx.translate(cx, cy)
+      ctx.rotate((piece.rotation * Math.PI) / 180)
+      ctx.drawImage(bitmap, -targetW / 2, -targetH / 2, targetW, targetH)
+      ctx.restore()
+      drawn += 1
+    } finally {
+      bitmap.close()
+    }
+  }
+
+  if (drawn === 0) throw new ToolCallError('Could not load any of this outfit\'s item images.', 'request_failed')
+
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, format, 0.86))
+  if (!blob) throw new ToolCallError('Could not encode the composited outfit image.', 'image_encode_failed')
+  const data = await blobToBase64(blob)
+
+  return {
+    content: [
+      {
+        type: 'text',
+        text: JSON.stringify({ kind: 'outfit.image', outfitId, itemCount: drawn, width: canvasWidth, height: canvasHeight, mimeType: format }),
+      },
+      { type: 'image', mimeType: format, data },
+    ],
+  }
+}
+
+async function loadOutfitPieceBitmap(piece: OutfitItem): Promise<ImageBitmap | null> {
+  if (!piece.media) return null
+  try {
+    const response = await fetch(piece.media.url, { credentials: 'include' })
+    if (!response.ok) return null
+    return await createImageBitmap(await response.blob())
+  } catch {
+    return null
+  }
+}
+
+function serializeAgentWardrobeItem(item: WardrobeItem) {
+  const metadata = {
+    name: metadataField(item.name),
+    category: metadataField(item.category),
+    subcategory: metadataField(item.subcategory),
+    color: metadataField(item.color),
+    description: metadataField(item.description),
+    occasion: metadataListField(item.occasion),
+    season: metadataListField(item.season),
+    status: statusField(item.status),
+    notes: metadataField(item.notes),
+  }
+  const derivedRole = wardrobeCategoryToRole(item)
+
+  return {
+    id: item.id,
+    type: 'wardrobe_item',
+    metadata,
+    derived: {
+      outfitRole: {
+        value: derivedRole,
+        source: 'derived',
+        confidence: roleConfidence(item.category, derivedRole),
+        basis: 'wardrobe category',
+      },
+    },
+    metadataGaps: wardrobeItemGaps(item),
+    media: serializeMedia(item.media),
+    timestamps: {
+      createdAt: item.createdAt,
+      updatedAt: item.updatedAt,
+    },
+  }
+}
+
+function serializeAgentImportDraft(draft: ImportDraft) {
+  const imageUrl = draftImageUrl(draft)
+
+  return {
+    id: draft.id,
+    type: 'import_draft',
+    fileName: draft.fileName,
+    fileSize: draft.fileSize,
+    status: draft.status,
+    failureStage: draft.failureStage,
+    message: draft.message,
+    error: draft.error,
+    canSave: draft.status === 'ready' && Boolean(draft.cutout && draft.form.name.trim() && draft.form.category.trim()),
+    metadata: {
+      name: metadataField(draft.form.name),
+      category: metadataField(draft.form.category),
+      subcategory: metadataField(draft.form.subcategory),
+      color: metadataField(draft.form.color),
+      description: metadataField(draft.form.description),
+      occasion: metadataListField(draft.form.occasion),
+      season: metadataListField(draft.form.season),
+      status: statusField(draft.form.status),
+      notes: metadataField(draft.form.notes),
+    },
+    metadataGaps: formGaps(draft.form, Boolean(draft.cutout)),
+    media: {
+      kind: draft.cutout ? 'browser-local-cutout-preview' : 'browser-local-source-preview',
+      url: imageUrl,
+      originalUrl: draft.originalUrl,
+      cutoutUrl: draft.cutout?.url ?? null,
+      width: draft.cutout?.width ?? null,
+      height: draft.cutout?.height ?? null,
+      availability: imageUrl ? 'current_tab_session' : 'missing',
+    },
+  }
+}
+
+function serializeAgentOutfit(outfit: Outfit) {
+  return {
+    ...outfit,
+    type: 'outfit',
+    metadata: {
+      name: metadataField(outfit.name),
+      category: metadataField(outfit.category),
+      source: metadataField(outfit.source),
+      description: metadataField(outfit.description),
+      stylingFormula: metadataField(outfit.stylingFormula),
+      occasion: metadataListField(outfit.occasion),
+      season: metadataListField(outfit.season),
+      status: statusField(outfit.status),
+      notes: metadataField(outfit.notes),
+    },
+    metadataGaps: outfitGaps(outfit),
+    preview: {
+      compositionModel: 'layered_item_cutouts',
+      itemCount: outfit.items.length,
+    },
+    items: outfit.items.map((item) => ({
+      id: item.id,
+      outfitItemId: item.outfitItemId,
+      role: roleField(item.role),
+      placement: {
+        x: item.x,
+        y: item.y,
+        scale: item.scale,
+        rotation: item.rotation,
+        zIndex: item.zIndex,
+      },
+      metadata: {
+        name: metadataField(item.name),
+        category: metadataField(item.category),
+        subcategory: metadataField(item.subcategory),
+        color: metadataField(item.color),
+        description: metadataField(item.description),
+        occasion: metadataListField(item.occasion),
+        season: metadataListField(item.season),
+        status: statusField(item.status),
+        notes: metadataField(item.notes),
+      },
+      metadataGaps: wardrobeItemGaps(item),
+      media: serializeMedia(item.media),
+    })),
+  }
+}
+
+function metadataField(value: string | null | undefined) {
+  const normalized = typeof value === 'string' ? value.trim() : ''
+
+  if (!normalized) {
+    return {
+      value: null,
+      source: 'missing',
+      confidence: 0,
+    }
+  }
+
+  return {
+    value: normalized,
+    source: 'user_entered',
+    confidence: 1,
+  }
+}
+
+function roleField(role: OutfitRole) {
+  return {
+    value: role,
+    source: 'user_entered',
+    confidence: 1,
+  }
+}
+
+// status is a controlled lifecycle value (e.g. 'owned') the app assigns and
+// manages, not free-form metadata a user types. Mark it system-managed so the
+// agent does not treat it as user-entered metadata it could revise or flag as
+// a gap.
+function statusField(value: string | null | undefined) {
+  const normalized = typeof value === 'string' ? value.trim() : ''
+
+  return {
+    value: normalized || null,
+    source: 'system_managed',
+    confidence: normalized ? 1 : 0,
+  }
+}
+
+// occasion and season are multi-select controlled values stored as CSV. Expose
+// them to the agent as an array under `values` so reads mirror what
+// wardrobe_item_mutate accepts on write (an array of enum values).
+function metadataListField(value: string | null | undefined) {
+  const values = csvToArray(typeof value === 'string' ? value : '')
+
+  if (values.length === 0) {
+    return { values: [], source: 'missing', confidence: 0 }
+  }
+
+  return { values, source: 'user_entered', confidence: 1 }
+}
+
+function serializeMedia(media: WardrobeItem['media']) {
+  if (!media) {
+    return {
+      availability: 'missing',
+      reference: null,
+    }
+  }
+
+  return {
+    availability: 'authenticated_same_origin',
+    reference: {
+      id: media.id,
+      url: absoluteUrl(media.url),
+      relativeUrl: media.url,
+      width: media.width,
+      height: media.height,
+      requiresBrowserSession: true,
+    },
+  }
+}
+
+function wardrobeItemGaps(item: Pick<WardrobeItem, 'media' | 'subcategory' | 'color' | 'occasion' | 'season' | 'description' | 'notes'>) {
+  const gaps: string[] = []
+  if (!item.media) gaps.push('missing_media')
+  if (!item.subcategory?.trim()) gaps.push('missing_subcategory')
+  if (!item.color?.trim()) gaps.push('missing_color')
+  if (!item.occasion?.trim()) gaps.push('missing_occasion')
+  if (!item.season?.trim()) gaps.push('missing_season')
+  if (!item.description?.trim()) gaps.push('missing_description')
+  if (!item.notes?.trim()) gaps.push('missing_notes')
+  return gaps
+}
+
+function formGaps(form: WardrobeFormState, hasMedia: boolean) {
+  return wardrobeItemGaps({
+    media: hasMedia ? { id: 'draft-cutout', url: '', width: null, height: null } : null,
+    subcategory: form.subcategory,
+    color: form.color,
+    occasion: form.occasion,
+    season: form.season,
+    description: form.description,
+    notes: form.notes,
+  })
+}
+
+function outfitGaps(outfit: Outfit) {
+  const gaps: string[] = []
+  if (!outfit.items.length) gaps.push('missing_items')
+  if (!outfit.occasion?.trim()) gaps.push('missing_occasion')
+  if (!outfit.season?.trim()) gaps.push('missing_season')
+  if (!outfit.description?.trim()) gaps.push('missing_description')
+  if (!outfit.notes?.trim()) gaps.push('missing_notes')
+  if (outfit.items.some((item) => !item.media)) gaps.push('item_missing_media')
+  return gaps
+}
+
+function roleConfidence(category: string | null | undefined, role: OutfitRole) {
+  if (!category?.trim()) return 0
+  if (role === 'accessories' && category !== 'Accessories') return 0.4
+  return 0.7
+}
+
+function searchableItemText(item: WardrobeItem) {
+  return [
+    item.name,
+    item.category,
+    item.subcategory,
+    item.color,
+    item.description,
+    item.occasion,
+    item.season,
+    item.notes,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()
+}
+
+function itemUpdateFieldsSchema() {
+  return {
+    type: 'object',
+    properties: {
+      title: { type: 'string', description: 'Visible item title. Alias for name; submit only one of title or name unless they match.' },
+      name: { type: 'string', description: 'Visible item title. Alias for title; submit only one of name or title unless they match.' },
+      category: { type: 'string', enum: categories },
+      subcategory: { type: 'string', enum: allSubcategories, description: 'Must belong to the chosen category (a mismatched pair is rejected with the allowed list for that category).' },
+      color: { type: 'string', enum: COLORS },
+      description: { type: 'string' },
+      occasion: { type: 'array', items: { type: 'string', enum: OCCASIONS }, description: 'Zero or more occasions from the allowed list. Replaces the full set; pass [] to clear.' },
+      season: { type: 'array', items: { type: 'string', enum: SEASONS }, description: 'Zero or more seasons from the allowed list. Replaces the full set; pass [] to clear.' },
+      notes: { type: 'string' },
+    },
+    additionalProperties: false,
+  } as const
+}
+
+// Read and validate the discriminating "action" field of a mutation/read tool.
+// Per-action required fields are enforced in each handler rather than via JSON
+// Schema oneOf, which the polyfill validator does not handle reliably.
+function readAction<T extends string>(args: Record<string, unknown>, allowed: readonly T[]): T {
+  const action = args.action
+  if (typeof action !== 'string' || !allowed.includes(action as T)) {
+    throw new ToolCallError(`action must be one of: ${allowed.join(', ')}.`, 'invalid_input')
+  }
+  return action as T
+}
+
+function optionalStringArray(value: unknown, label: string): string[] {
+  if (value === undefined) return []
+  if (!Array.isArray(value)) throw new ToolCallError(`${label} must be an array of ids.`, 'invalid_input')
+  return value.map((entry) => {
+    if (typeof entry !== 'string' || !entry.trim()) throw new ToolCallError(`${label} must contain non-empty id strings.`, 'invalid_input')
+    return entry.trim()
+  })
+}
+
+function requireStringArray(value: unknown, label: string): string[] {
+  const ids = optionalStringArray(value, label)
+  if (ids.length === 0) throw new ToolCallError(`${label} must contain at least one id.`, 'invalid_input')
+  return ids
+}
+
+function readBoolean(value: unknown, label: string): boolean {
+  if (typeof value !== 'boolean') throw new ToolCallError(`${label} must be true or false.`, 'invalid_input')
+  return value
+}
+
+// Build the outfit create/update payload from tool args. The composition is
+// replace-all: every item needs itemId + role; placement is optional. When an
+// agent omits placement, use the same kind of flat-lay defaults the visual
+// builder starts with instead of stacking pieces in the center.
+function buildOutfitPayload(args: Record<string, unknown>): CreateOutfitPayload {
+  const name = requiredString(args.name, 'name')
+
+  if (!Array.isArray(args.items) || args.items.length === 0) {
+    throw new ToolCallError('items must be a non-empty array; an outfit needs at least one piece.', 'invalid_input')
+  }
+
+  const seenItems = new Set<string>()
+  const roleOffsets = new Map<OutfitRole, number>()
+  const items: CreateOutfitItemPayload[] = args.items.map((raw, index) => {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new ToolCallError('Each outfit item must be an object.', 'invalid_input')
+    const entry = raw as Record<string, unknown>
+    const itemId = requiredString(entry.itemId, `items[${index}].itemId`)
+    const role = entry.role
+    if (typeof role !== 'string' || !outfitRoles.includes(role as OutfitRole)) {
+      throw new ToolCallError(`items[${index}].role must be one of: ${outfitRoles.join(', ')}.`, 'invalid_input')
+    }
+    if (seenItems.has(itemId)) throw new ToolCallError(`items[${index}].itemId "${itemId}" appears more than once; each wardrobe item can be used once per outfit.`, 'invalid_input')
+    seenItems.add(itemId)
+    const outfitRole = role as OutfitRole
+    const roleOffset = roleOffsets.get(outfitRole) ?? 0
+    roleOffsets.set(outfitRole, roleOffset + 1)
+    const defaultPosition = defaultAgentOutfitPosition(outfitRole, roleOffset)
+
+    return {
+      itemId,
+      role: outfitRole,
+      x: optionalNumber(entry.x) ?? defaultPosition.x,
+      y: optionalNumber(entry.y) ?? defaultPosition.y,
+      scale: optionalNumber(entry.scale) ?? 1,
+      rotation: optionalNumber(entry.rotation) ?? 0,
+      zIndex: optionalNumber(entry.zIndex) ?? defaultAgentOutfitZIndex(outfitRole, roleOffset, index),
+    }
+  })
+
+  return {
+    name,
+    description: optionalString(args.description) || null,
+    notes: optionalString(args.notes) || null,
+    occasion: args.occasion === undefined ? null : parseControlledList(args.occasion, 'occasion', OCCASIONS) || null,
+    season: args.season === undefined ? null : parseControlledList(args.season, 'season', SEASONS) || null,
+    items,
+  }
+}
+
+function defaultAgentOutfitPosition(role: OutfitRole, roleOffset: number) {
+  const position = legacyPositionFor(role, roleOffset)
+
+  if (role === 'accessories' || roleOffset === 0) {
+    return position
+  }
+
+  const offsetX = ((roleOffset % 3) - 1) * 0.05
+  return { x: clampUnit(position.x + offsetX), y: position.y }
+}
+
+function defaultAgentOutfitZIndex(role: OutfitRole, roleOffset: number, fallback: number) {
+  return (agentOutfitZIndex[role] ?? fallback * 100) + roleOffset
+}
+
+function buildPackingForm(args: Record<string, unknown>, requireName: boolean): PackingPlanFormState {
+  const name = requireName ? requiredString(args.name, 'name') : optionalString(args.name)
+  const status = args.status === undefined ? 'planning' : readEnum(args.status, 'status', packingStatuses)
+
+  return {
+    plan: name,
+    startDate: optionalString(args.startDate),
+    endDate: optionalString(args.endDate),
+    status,
+    notes: optionalString(args.notes),
+  }
+}
+
+function readEnum<T extends string>(value: unknown, label: string, allowed: readonly T[]): T {
+  if (typeof value !== 'string' || !allowed.includes(value as T)) {
+    throw new ToolCallError(`${label} must be one of: ${allowed.join(', ')}.`, 'invalid_input')
+  }
+  return value as T
+}
+
+function optionalNumber(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null
+}
+
+// Validate a multi-select controlled field (occasion, season) supplied as an
+// array of enum values and return the CSV string the form/API expects. Order is
+// preserved and duplicates are dropped; an empty array clears the field.
+function parseControlledList(value: unknown, label: string, allowed: readonly string[]): string {
+  if (!Array.isArray(value)) {
+    throw new ToolCallError(`${label} must be an array of values from: ${allowed.join(', ')}.`, 'invalid_input')
+  }
+
+  const seen = new Set<string>()
+  for (const entry of value) {
+    if (typeof entry !== 'string' || !allowed.includes(entry)) {
+      throw new ToolCallError(`${label} contains an invalid value; allowed values are: ${allowed.join(', ')}.`, 'invalid_input')
+    }
+    seen.add(entry)
+  }
+
+  return arrayToCsv([...seen])
+}
+
+// Parse and validate the editable metadata fields shared by wardrobe items and
+// import drafts. currentCategory is the resource's saved category, used to
+// validate a subcategory when the update does not also change the category. Does
+// not read any id field, so it works for both wardrobe items (itemId) and drafts
+// (draftId).
+function parseItemFields(rawFieldsValue: unknown, currentCategory: string): ItemUpdateFields {
+  if (!rawFieldsValue || typeof rawFieldsValue !== 'object' || Array.isArray(rawFieldsValue)) {
+    throw new ToolCallError('fields must be an object.', 'invalid_input')
+  }
+
+  const fields: ItemUpdateFields = {}
+  const rawFields = rawFieldsValue as Record<string, unknown>
+
+  if (Object.hasOwn(rawFields, 'title')) {
+    const title = rawFields.title
+    if (typeof title !== 'string') {
+      throw new ToolCallError('title must be text.', 'invalid_input')
+    }
+
+    if (Object.hasOwn(rawFields, 'name')) {
+      const name = rawFields.name
+      if (typeof name !== 'string') {
+        throw new ToolCallError('name must be text.', 'invalid_input')
+      }
+      if (name !== title) {
+        throw new ToolCallError('Use either fields.title or fields.name, or provide the same value for both.', 'invalid_input')
+      }
+    }
+
+    fields.name = title
+  }
+
+  // occasion and season are multi-select controlled values stored as CSV. The
+  // agent sends them as arrays of enum values; everything else is a string.
+  const stringKeys = itemUpdateKeys.filter((key) => key !== 'occasion' && key !== 'season')
+
+  for (const key of stringKeys) {
+    if (!Object.hasOwn(rawFields, key)) continue
+    const value = rawFields[key]
+    if (typeof value !== 'string') {
+      throw new ToolCallError(`${key} must be text.`, 'invalid_input')
+    }
+    fields[key] = value
+  }
+
+  if (Object.hasOwn(rawFields, 'occasion')) {
+    fields.occasion = parseControlledList(rawFields.occasion, 'occasion', OCCASIONS)
+  }
+  if (Object.hasOwn(rawFields, 'season')) {
+    fields.season = parseControlledList(rawFields.season, 'season', SEASONS)
+  }
+
+  if (Object.keys(fields).length === 0) {
+    throw new ToolCallError('At least one update field is required.', 'invalid_input')
+  }
+
+  if (fields.name !== undefined && !fields.name.trim()) {
+    throw new ToolCallError('name cannot be blank.', 'invalid_input')
+  }
+
+  if (fields.category !== undefined && !categories.includes(fields.category)) {
+    throw new ToolCallError(`category must be one of: ${categories.join(', ')}.`, 'invalid_input')
+  }
+
+  if (fields.color !== undefined && fields.color.trim() && !COLORS.includes(fields.color as (typeof COLORS)[number])) {
+    throw new ToolCallError(`color must be one of: ${COLORS.join(', ')}.`, 'invalid_input')
+  }
+
+  // Cross-check subcategory against the resolved category (the field being set,
+  // or the item's current one). This rejects valid-but-mismatched pairs like
+  // Tops + Jacket that a flat enum alone would allow.
+  if (fields.subcategory !== undefined && fields.subcategory.trim()) {
+    const category = fields.category ?? currentCategory
+    const allowed = SUBCATEGORIES_BY_CATEGORY[category] ?? []
+    if (!allowed.includes(fields.subcategory)) {
+      throw new ToolCallError(
+        `subcategory "${fields.subcategory}" is not valid for category "${category}". Allowed: ${allowed.length ? allowed.join(', ') : '(none for this category)'}.`,
+        'invalid_input',
+      )
+    }
+  }
+
+  return fields
+}
+
+async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(url, init)
+  const payload = (await response.json().catch(() => null)) as { error?: string } | null
+
+  if (!response.ok) {
+    throw new ToolCallError(payload?.error ?? `Request failed with status ${response.status}.`, response.status === 401 ? 'authentication_required' : 'request_failed')
+  }
+
+  return payload as T
+}
+
+// WebMCP reports rejected execute callbacks as failed tool calls, so handlers
+// throw instead of returning a separate error envelope.
+class ToolCallError extends Error {
+  constructor(message: string, code: string) {
+    super(`[${code}] ${message}`)
+    this.name = 'ToolCallError'
+  }
+}
+
+function requiredString(value: unknown, label: string): string {
+  if (typeof value !== 'string' || !value.trim()) {
+    throw new ToolCallError(`${label} is required.`, 'invalid_input')
+  }
+
+  return value.trim()
+}
+
+function optionalString(value: unknown) {
+  return typeof value === 'string' ? value.trim() : ''
+}
+
+function boundedLimit(value: unknown, fallback: number, max: number) {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return fallback
+  return Math.max(1, Math.min(Math.trunc(value), max))
+}
+
+function safeUser(user: WorkspaceUser) {
+  return {
+    name: user.name ?? null,
+    email: user.email ?? null,
+  }
+}
+
+function absoluteUrl(url: string) {
+  if (typeof window === 'undefined') return url
+  return new URL(url, window.location.origin).toString()
+}
+
+// Decode, optionally downscale (longest edge to maxWidth, never upscale), and
+// re-encode an image so tool results stay light. The source is same-origin, so
+// the canvas is not tainted and toBlob succeeds.
+async function downscaleImage(source: Blob, maxWidth: number, format: ImageFormat): Promise<{ blob: Blob; width: number; height: number }> {
+  const bitmap = await createImageBitmap(source)
+  try {
+    const scale = Math.min(1, maxWidth / Math.max(bitmap.width, bitmap.height))
+    const width = Math.max(1, Math.round(bitmap.width * scale))
+    const height = Math.max(1, Math.round(bitmap.height * scale))
+
+    const canvas = document.createElement('canvas')
+    canvas.width = width
+    canvas.height = height
+
+    const ctx = canvas.getContext('2d')
+    if (!ctx) throw new ToolCallError('Could not get a 2D canvas context to encode the image.', 'image_encode_failed')
+    ctx.drawImage(bitmap, 0, 0, width, height)
+
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, format, 0.86))
+    if (!blob) throw new ToolCallError('Could not encode the resized image.', 'image_encode_failed')
+
+    return { blob, width, height }
+  } finally {
+    bitmap.close()
+  }
+}
+
+// Base64-encode in chunks to avoid String.fromCharCode stack overflow on large
+// byte arrays.
+async function blobToBase64(blob: Blob): Promise<string> {
+  const bytes = new Uint8Array(await blob.arrayBuffer())
+  const chunkSize = 0x8000
+  let binary = ''
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize))
+  }
+  return btoa(binary)
+}

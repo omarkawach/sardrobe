@@ -1,0 +1,38 @@
+@sardrobe/background-remover
+Copyright (c) 2026 Omar Kawach
+
+This package performs in-browser background removal for Sardrobe. It runs the
+DIS ISNet "general-use" model on ONNX Runtime Web (WebGPU, with a WASM
+fallback). It is distributed under the MIT License.
+
+================================================================================
+Third-party acknowledgements
+================================================================================
+
+DIS (Dichotomous Image Segmentation) — ISNet architecture and model
+  Copyright (c) Xuebin Qin and the DIS authors
+  Code license: Apache License 2.0
+  Source:  https://github.com/xuebinqin/DIS
+  The ISNet architecture is vendored under tooling/dis/isnet.py (unmodified).
+  The official isnet-general-use.pth weights are distributed by the DIS authors
+  from links in the official DIS README. That README expressly applies
+  Apache-2.0 to the project's code and evaluation metric, but does not state a
+  separate license for the externally hosted weight file. The ONNX model served
+  by Sardrobe is a converted form of those official weights; see tooling/README.md
+  for provenance and conversion details.
+
+onnxruntime-web
+  License: MIT
+  Source:  https://www.npmjs.com/package/onnxruntime-web
+
+lodash-es
+  License: MIT
+  Source:  https://lodash.com/
+
+ndarray
+  License: MIT
+  Source:  https://www.npmjs.com/package/ndarray
+
+zod
+  License: MIT
+  Source:  https://www.npmjs.com/package/zod

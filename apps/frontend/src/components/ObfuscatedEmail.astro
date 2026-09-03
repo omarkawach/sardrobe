@@ -1,0 +1,37 @@
+---
+interface Props {
+  user: string;
+  domain: string;
+  tld: string;
+}
+
+const { user, domain, tld } = Astro.props;
+---
+
+<span
+  class="obfuscated-email"
+  data-user={user}
+  data-domain={domain}
+  data-tld={tld}
+>
+  <noscript>{user} [at] {domain} [dot] {tld}</noscript>
+</span>
+
+<script>
+  function revealEmails() {
+    for (const el of document.querySelectorAll<HTMLElement>(".obfuscated-email")) {
+      if (el.dataset.bound === "true") continue;
+      const { user, domain, tld } = el.dataset;
+      if (!user || !domain || !tld) continue;
+      const address = `${user}@${domain}.${tld}`;
+      const link = document.createElement("a");
+      link.href = `mailto:${address}`;
+      link.textContent = address;
+      el.replaceChildren(link);
+      el.dataset.bound = "true";
+    }
+  }
+
+  // Runs on first load and after every Astro view transition.
+  document.addEventListener("astro:page-load", revealEmails);
+</script>

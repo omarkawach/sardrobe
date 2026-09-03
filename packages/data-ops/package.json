@@ -1,0 +1,38 @@
+{
+  "name": "@sardrobe/data-ops",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./auth": "./src/auth.ts",
+    "./auth-schema": "./src/auth-schema.ts",
+    "./db": "./src/db/database.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "generate": "drizzle-kit generate --config drizzle.config.ts",
+    "migrate": "drizzle-kit migrate --config drizzle.config.ts",
+    "pull": "drizzle-kit pull --config drizzle.config.ts",
+    "studio": "drizzle-kit studio --config drizzle.config.ts",
+    "better-auth-generate": "pnpm dlx auth@latest generate --config ./auth-gen/auth.ts --output ./src/auth-schema.ts",
+    "db:migrate:local": "wrangler d1 migrations apply DB --config ../../apps/backend/wrangler.jsonc --local",
+    "db:migrate:remote": "wrangler d1 migrations apply DB --config ../../apps/backend/wrangler.jsonc --remote",
+    "db:migrate:sardrobe:development": "wrangler d1 migrations apply DB --config ../../apps/backend/wrangler.sardrobe.jsonc --env development --remote",
+    "db:migrate:sardrobe:production": "wrangler d1 migrations apply DB --config ../../apps/backend/wrangler.sardrobe.jsonc --env production --remote"
+  },
+  "dependencies": {
+    "better-auth": "^1.7.2",
+    "drizzle-orm": "^0.45.2",
+    "kysely": "^0.29.5",
+    "kysely-d1": "^0.4.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "4.20260702.1",
+    "@types/node": "catalog:",
+    "drizzle-kit": "^0.31.10",
+    "typescript": "catalog:",
+    "wrangler": "4.127.0"
+  }
+}

@@ -1,0 +1,31 @@
+.card {
+  background-color: var(--sardrobe-paper-color);
+  color: var(--sardrobe-text-body);
+  border: var(--sardrobe-border-style) var(--sardrobe-border-width) var(--sardrobe-neutral-stroke-soft);
+  border-radius: var(--sardrobe-border-radius-md);
+  padding: 1.5rem;
+  container-type: inline-size;
+  box-shadow: var(--sardrobe-shadow-soft);
+  transition:
+    box-shadow 150ms ease,
+    border-color 150ms ease,
+    transform 150ms ease;
+}
+
+.card--hover {
+  cursor: default;
+}
+
+.card--hover:hover {
+  box-shadow: var(--sardrobe-shadow-mid);
+  border-color: var(--sardrobe-focus-color);
+  transform: translateY(-2px);
+}
+
+.card--hover:focus-visible {
+  outline: none;
+  border-color: var(--sardrobe-focus-color);
+  box-shadow:
+    0 0 0 2px var(--sardrobe-background-color),
+    0 0 0 4px var(--sardrobe-focus-color);
+}

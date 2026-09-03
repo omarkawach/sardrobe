@@ -1,0 +1,6 @@
+APP_ENV=development
+BETTER_AUTH_URL=http://localhost:4321
+# Run openssl rand -hex 32
+BETTER_AUTH_SECRET=
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=

@@ -1,0 +1,3 @@
+APP_ENV=development
+PUBLIC_APP_URL=http://localhost:4321
+PUBLIC_BACKGROUND_REMOVAL_MANIFEST_URL=https://models.sardrobe.com/isnet-general-use-1024-webgpu-v2/manifest.json

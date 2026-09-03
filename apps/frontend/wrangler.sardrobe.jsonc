@@ -1,0 +1,70 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "sardrobe-frontend",
+  "account_id": "7b54b68063ef0278e08cb46311940e38",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-08-22",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "run_worker_first": true
+  },
+  "observability": {
+    "enabled": true
+  },
+  "env": {
+    "development": {
+      "name": "sardrobe-frontend-development",
+      "vars": {
+        "APP_ENV": "development",
+        "PUBLIC_APP_URL": "https://dev.sardrobe.com",
+        "SENTRY_DSN": "https://cfe25180e26788cf7b16c6d4db9f83c8@o4511531104665601.ingest.us.sentry.io/4511531133566976"
+      },
+      "routes": [
+        {
+          "pattern": "dev.sardrobe.com",
+          "custom_domain": true
+        }
+      ],
+      "r2_buckets": [
+        {
+          "binding": "MODEL_ASSETS",
+          "bucket_name": "sardrobe-background-removal-models"
+        }
+      ],
+      "services": [
+        {
+          "binding": "BACKEND_SERVICE",
+          "service": "sardrobe-backend-development"
+        }
+      ]
+    },
+    "production": {
+      "name": "sardrobe-frontend-production",
+      "vars": {
+        "APP_ENV": "production",
+        "PUBLIC_APP_URL": "https://sardrobe.com",
+        "SENTRY_DSN": "https://cfe25180e26788cf7b16c6d4db9f83c8@o4511531104665601.ingest.us.sentry.io/4511531133566976"
+      },
+      "routes": [
+        {
+          "pattern": "sardrobe.com",
+          "custom_domain": true
+        }
+      ],
+      "r2_buckets": [
+        {
+          "binding": "MODEL_ASSETS",
+          "bucket_name": "sardrobe-background-removal-models"
+        }
+      ],
+      "services": [
+        {
+          "binding": "BACKEND_SERVICE",
+          "service": "sardrobe-backend-production"
+        }
+      ]
+    }
+  }
+}

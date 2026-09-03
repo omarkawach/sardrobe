@@ -1,0 +1,157 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "sardrobe-backend",
+  "account_id": "7b54b68063ef0278e08cb46311940e38",
+  "main": "src/index.ts",
+  "workers_dev": false,
+  "preview_urls": false,
+  "compatibility_date": "2026-08-22",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true
+  },
+  "env": {
+    "local": {
+      "name": "sardrobe-backend-local",
+      "vars": {
+        "APP_ENV": "local",
+        "BETTER_AUTH_URL": "http://localhost:4321",
+        "SENTRY_DSN": ""
+      },
+      "images": {
+        "binding": "IMAGES"
+      },
+      "ratelimits": [
+        {
+          "name": "WRITE_RATE_LIMITER",
+          "namespace_id": "872031486",
+          "simple": {
+            "limit": 120,
+            "period": 60
+          }
+        }
+      ],
+      "r2_buckets": [
+        {
+          "binding": "WARDROBE_MEDIA",
+          "bucket_name": "sardrobe-media-development"
+        }
+      ],
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "sardrobe-development",
+          "database_id": "adf1e0f9-cfbb-46d0-a09c-9cee69f46b42",
+          "preview_database_id": "adf1e0f9-cfbb-46d0-a09c-9cee69f46b42",
+          "migrations_dir": "../../packages/data-ops/drizzle"
+        }
+      ]
+    },
+    "development": {
+      "name": "sardrobe-backend-development",
+      "vars": {
+        "APP_ENV": "development",
+        "BETTER_AUTH_URL": "https://dev.sardrobe.com",
+        "SENTRY_DSN": "https://bcd0a565a45ee8b66abdf8b475732976@o4511531104665601.ingest.us.sentry.io/4511531329716224"
+      },
+      "images": {
+        "binding": "IMAGES"
+      },
+      "ratelimits": [
+        {
+          "name": "WRITE_RATE_LIMITER",
+          "namespace_id": "872031487",
+          "simple": {
+            "limit": 120,
+            "period": 60
+          }
+        }
+      ],
+      "r2_buckets": [
+        {
+          "binding": "WARDROBE_MEDIA",
+          "bucket_name": "sardrobe-media-development"
+        }
+      ],
+      "secrets_store_secrets": [
+        {
+          "binding": "BETTER_AUTH_SECRET",
+          "store_id": "3139f49b79e648e6beeb20d162056a3c",
+          "secret_name": "BETTER_AUTH_SECRET"
+        },
+        {
+          "binding": "GOOGLE_CLIENT_ID",
+          "store_id": "3139f49b79e648e6beeb20d162056a3c",
+          "secret_name": "GOOGLE_CLIENT_ID"
+        },
+        {
+          "binding": "GOOGLE_CLIENT_SECRET",
+          "store_id": "3139f49b79e648e6beeb20d162056a3c",
+          "secret_name": "GOOGLE_CLIENT_SECRET"
+        }
+      ],
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "sardrobe-development",
+          "database_id": "adf1e0f9-cfbb-46d0-a09c-9cee69f46b42",
+          "preview_database_id": "adf1e0f9-cfbb-46d0-a09c-9cee69f46b42",
+          "migrations_dir": "../../packages/data-ops/drizzle"
+        }
+      ]
+    },
+    "production": {
+      "name": "sardrobe-backend-production",
+      "vars": {
+        "APP_ENV": "production",
+        "BETTER_AUTH_URL": "https://sardrobe.com",
+        "SENTRY_DSN": "https://bcd0a565a45ee8b66abdf8b475732976@o4511531104665601.ingest.us.sentry.io/4511531329716224"
+      },
+      "images": {
+        "binding": "IMAGES"
+      },
+      "ratelimits": [
+        {
+          "name": "WRITE_RATE_LIMITER",
+          "namespace_id": "872031488",
+          "simple": {
+            "limit": 120,
+            "period": 60
+          }
+        }
+      ],
+      "r2_buckets": [
+        {
+          "binding": "WARDROBE_MEDIA",
+          "bucket_name": "sardrobe-media-production"
+        }
+      ],
+      "secrets_store_secrets": [
+        {
+          "binding": "BETTER_AUTH_SECRET",
+          "store_id": "3139f49b79e648e6beeb20d162056a3c",
+          "secret_name": "BETTER_AUTH_SECRET"
+        },
+        {
+          "binding": "GOOGLE_CLIENT_ID",
+          "store_id": "3139f49b79e648e6beeb20d162056a3c",
+          "secret_name": "GOOGLE_CLIENT_ID"
+        },
+        {
+          "binding": "GOOGLE_CLIENT_SECRET",
+          "store_id": "3139f49b79e648e6beeb20d162056a3c",
+          "secret_name": "GOOGLE_CLIENT_SECRET"
+        }
+      ],
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "sardrobe-production",
+          "database_id": "dbf1bf9c-3408-4d7f-8f36-4b3f4019d1b1",
+          "preview_database_id": "dbf1bf9c-3408-4d7f-8f36-4b3f4019d1b1",
+          "migrations_dir": "../../packages/data-ops/drizzle"
+        }
+      ]
+    }
+  }
+}

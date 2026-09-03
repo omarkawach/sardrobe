@@ -1,0 +1,116 @@
+.select__trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  height: 2.5rem;
+  padding-block: 0.5rem;
+  padding-inline: 0.75rem;
+  font-family: var(--sardrobe-font-family);
+  font-size: 0.875rem;
+  color: var(--sardrobe-text-body);
+  background-color: var(--sardrobe-background-color);
+  border: var(--sardrobe-border-style) var(--sardrobe-border-width) var(--sardrobe-neutral-stroke-soft);
+  border-radius: var(--sardrobe-border-radius-md);
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.select__trigger:hover:not([data-disabled]) {
+  border-color: var(--sardrobe-focus-color);
+}
+
+.select__trigger:focus-visible {
+  outline: none;
+  border-color: var(--sardrobe-focus-color);
+  box-shadow:
+    0 0 0 2px var(--sardrobe-background-color),
+    0 0 0 4px color-mix(in oklab, var(--sardrobe-focus-color), transparent 80%);
+}
+
+.select__trigger[data-disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.select__trigger--sm {
+  height: 2rem;
+  padding-block: 0.25rem;
+  padding-inline: 0.5rem;
+  font-size: 0.75rem;
+}
+
+.select__placeholder {
+  color: var(--sardrobe-text-muted);
+}
+
+.select__positioner {
+  z-index: 50;
+}
+
+.select__popup {
+  min-width: max(8rem, var(--anchor-width, 0px));
+  overflow: hidden;
+  background-color: var(--sardrobe-paper-color);
+  border: var(--sardrobe-border-style) var(--sardrobe-border-width) var(--sardrobe-neutral-stroke-soft);
+  border-radius: var(--sardrobe-border-radius-md);
+  box-shadow:
+    0 4px 6px -1px color-mix(in oklab, var(--sardrobe-text-body), transparent 90%),
+    0 2px 4px -2px color-mix(in oklab, var(--sardrobe-text-body), transparent 90%);
+}
+
+.select__popup[data-starting-style],
+.select__popup[data-ending-style] {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+.select__list {
+  padding: 0.25rem;
+}
+
+.select__option {
+  display: flex;
+  align-items: center;
+  padding-block: 0.5rem;
+  padding-inline: 0.75rem;
+  font-family: var(--sardrobe-font-family);
+  font-size: 0.875rem;
+  color: var(--sardrobe-text-body);
+  border-radius: calc(var(--sardrobe-border-radius-md) - 2px);
+  cursor: pointer;
+  outline: none;
+  transition: background-color 100ms ease;
+}
+
+.select__option:hover,
+.select__option[data-highlighted] {
+  background-color: var(--sardrobe-neutral-fill-softer);
+  color: var(--sardrobe-neutral-text-on-soft);
+}
+
+.select__option[data-selected] {
+  background-color: var(--sardrobe-primary-fill-mid);
+  color: var(--sardrobe-primary-text-on-mid);
+}
+
+.select__option[data-disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.select__option-group {
+  padding: 0.25rem 0;
+}
+
+.select__group-label {
+  padding-block: 0.5rem 0.25rem;
+  padding-inline: 0.75rem;
+  font-family: var(--sardrobe-font-family);
+  font-size: 0.75rem;
+  font-weight: var(--sardrobe-font-weight-semibold);
+  color: var(--sardrobe-text-muted);
+}

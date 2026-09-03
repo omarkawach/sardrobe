@@ -1,0 +1,144 @@
+.alert-dialog__trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.alert-dialog__backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgb(0 0 0 / 0.5);
+  z-index: 50;
+}
+
+.alert-dialog__backdrop[data-starting-style],
+.alert-dialog__backdrop[data-ending-style] {
+  opacity: 0;
+}
+
+.alert-dialog__popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 50;
+  width: calc(100% - 2rem);
+  max-width: 28rem;
+  background-color: var(--sardrobe-background-color);
+  border: var(--sardrobe-border-style) var(--sardrobe-border-width) var(--sardrobe-neutral-stroke-soft);
+  border-radius: var(--sardrobe-border-radius-md);
+  padding: 1.5rem;
+  box-shadow:
+    0 10px 15px -3px color-mix(in oklab, var(--sardrobe-text-body), transparent 90%),
+    0 4px 6px -4px color-mix(in oklab, var(--sardrobe-text-body), transparent 90%);
+}
+
+.alert-dialog__popup[data-starting-style],
+.alert-dialog__popup[data-ending-style] {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.95);
+}
+
+.alert-dialog__popup--sm {
+  max-width: 20rem;
+}
+
+.alert-dialog__popup--lg {
+  max-width: 36rem;
+}
+
+.alert-dialog__title {
+  font-family: var(--sardrobe-font-family);
+  font-size: 1.125rem;
+  font-weight: var(--sardrobe-font-weight-bold);
+  line-height: 1.25;
+  color: var(--sardrobe-text-body);
+  margin: 0 0 0.5rem;
+}
+
+.alert-dialog__description {
+  font-family: var(--sardrobe-font-family);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--sardrobe-text-muted);
+  margin: 0 0 1.5rem;
+}
+
+.alert-dialog__action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.5rem;
+  padding: 0 1rem;
+  font-family: var(--sardrobe-font-family);
+  font-size: 0.875rem;
+  font-weight: var(--sardrobe-font-weight-semibold);
+  border: none;
+  border-radius: var(--sardrobe-border-radius-md);
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.alert-dialog__action:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--sardrobe-background-color),
+    0 0 0 4px var(--sardrobe-focus-color);
+}
+
+.alert-dialog__action--primary {
+  background-color: var(--sardrobe-primary-fill-mid);
+  color: var(--sardrobe-primary-text-on-mid);
+}
+
+.alert-dialog__action--primary:hover {
+  background-color: color-mix(in oklab, var(--sardrobe-primary-fill-mid), transparent 10%);
+}
+
+.alert-dialog__action--secondary {
+  background-color: var(--sardrobe-neutral-fill-softer);
+  color: var(--sardrobe-neutral-text-on-soft);
+}
+
+.alert-dialog__action--secondary:hover {
+  background-color: color-mix(in oklab, var(--sardrobe-neutral-fill-softer), transparent 20%);
+}
+
+.alert-dialog__action--destructive {
+  background-color: var(--sardrobe-destructive-fill-mid);
+  color: var(--sardrobe-destructive-text-on-mid);
+}
+
+.alert-dialog__action--destructive:hover {
+  background-color: color-mix(in oklab, var(--sardrobe-destructive-fill-mid), transparent 10%);
+}
+
+.alert-dialog__action--outline {
+  background-color: transparent;
+  color: var(--sardrobe-text-body);
+  border: var(--sardrobe-border-style) var(--sardrobe-border-width) var(--sardrobe-neutral-stroke-soft);
+}
+
+.alert-dialog__action--outline:hover {
+  background-color: var(--sardrobe-neutral-fill-softer);
+  color: var(--sardrobe-neutral-text-on-soft);
+}
+
+.alert-dialog__action--ghost {
+  background-color: transparent;
+  color: var(--sardrobe-text-body);
+}
+
+.alert-dialog__action--ghost:hover {
+  background-color: var(--sardrobe-neutral-fill-softer);
+  color: var(--sardrobe-neutral-text-on-soft);
+}

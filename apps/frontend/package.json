@@ -1,0 +1,53 @@
+{
+  "name": "@sardrobe/frontend",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev --host",
+    "dev:cf": "pnpm build && wrangler dev",
+    "build": "astro check && astro build",
+    "preview": "astro preview --host",
+    "test": "vitest run",
+    "typecheck": "astro check",
+    "cf:check": "wrangler deploy --dry-run",
+    "cf:check:sardrobe:development": "wrangler deploy --dry-run --config wrangler.sardrobe.jsonc --env development",
+    "cf:check:sardrobe:production": "wrangler deploy --dry-run --config wrangler.sardrobe.jsonc --env production",
+    "types": "wrangler types --env-file .env.types",
+    "deploy": "pnpm build && wrangler deploy",
+    "deploy:sardrobe:development": "APP_ENV=development PUBLIC_APP_URL=https://dev.sardrobe.com pnpm build && wrangler deploy --config wrangler.sardrobe.jsonc --env development",
+    "deploy:sardrobe:production": "APP_ENV=production PUBLIC_APP_URL=https://sardrobe.com pnpm build && wrangler deploy --config wrangler.sardrobe.jsonc --env production"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.3",
+    "@browser-ai/transformers-js": "^3.0.2",
+    "@huggingface/transformers": "^4.2.0",
+    "@sardrobe/background-remover": "workspace:*",
+    "@sardrobe/react-components": "workspace:*",
+    "@sentry/astro": "catalog:",
+    "@sentry/cloudflare": "catalog:",
+    "@use-gesture/react": "^10.3.1",
+    "ai": "^7.0.83",
+    "astro": "catalog:",
+    "astro-seo": "^1.1.0",
+    "better-auth": "^1.7.2",
+    "lucide-react": "^1.34.0",
+    "medium-zoom": "1.1.0",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@astrojs/check": "catalog:",
+    "@astrojs/react": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "typescript": "catalog:",
+    "vite-plugin-static-copy": "^4.1.1",
+    "vitest": "catalog:",
+    "webmcp-types": "0.1.5",
+    "wrangler": "4.127.0"
+  }
+}

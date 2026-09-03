@@ -1,0 +1,245 @@
+---
+import LegalLayout from "../layouts/LegalLayout.astro";
+import ObfuscatedEmail from "../components/ObfuscatedEmail.astro";
+
+const updated = "August 27, 2026";
+---
+
+<LegalLayout
+  title="Terms of Service | Sardrobe"
+  description="The terms that govern your use of Sardrobe, your private digital wardrobe."
+  heading="Terms of Service"
+  updated={updated}
+>
+  <section class="legal__section">
+    <p>
+      These terms form an agreement between you and Omar Kawach, the United
+      States-based operator of Sardrobe ("Sardrobe," "we," "us," or "our"). They
+      govern your use of sardrobe.com and the Sardrobe app. By creating an
+      account or using the service, you agree to them. If you don't agree,
+      please don't use Sardrobe.
+    </p>
+  </section>
+
+  <section class="legal__section">
+    <h2>The service</h2>
+    <p>
+      Sardrobe is a private digital wardrobe that lets you upload photos of your
+      clothes, organize them, create outfits, and prepare packing plans.
+      Background removal is performed in your browser before a finished cutout
+      is saved. The optional AI feature downloads an open model and runs
+      it in your browser without a hosted AI fallback. We may add, change, limit,
+      or remove features over time.
+    </p>
+  </section>
+
+  <section class="legal__section">
+    <h2>AI suggestions</h2>
+    <p>
+      AI suggestions are generated automatically on your device and may
+      be incomplete, inaccurate, or unsuitable. Sardrobe presents them as drafts:
+      you are responsible for reviewing selected wardrobe pieces, outfit combinations,
+      dates, and packing recommendations before saving or relying on them. On-device planning AI
+      is not used to identify or describe individual wardrobe items. Device
+      and browser support varies, and the feature may be unavailable or fail to run
+      on some devices.
+    </p>
+  </section>
+
+  <section class="legal__section">
+    <h2>Eligibility and your account</h2>
+    <ul>
+      <li>You sign in with Google and are responsible for your account.</li>
+      <li>You must be at least 13 years old to use Sardrobe.</li>
+      <li>
+        If you have not reached the age of legal majority where you live, you
+        may use Sardrobe only with permission from a parent or legal guardian.
+      </li>
+      <li>
+        Keep your sign-in secure. You're responsible for activity that happens
+        under your account and must tell us promptly if you believe it has been
+        compromised.
+      </li>
+    </ul>
+  </section>
+
+  <section class="legal__section">
+    <h2>Your content</h2>
+    <p>
+      The photos and information you add to Sardrobe are yours. You keep all
+      rights to your content. You grant us only the limited permission needed to
+      host, store, reproduce, process, transmit, and display it to operate,
+      secure, and support the service. This permission is worldwide,
+      non-exclusive, and royalty-free, and it ends when the content is deleted
+      except for limited provider backups, security records, or legal
+      obligations described in the Privacy Policy.
+    </p>
+    <p>
+      You're responsible for what you upload, and you confirm you have the right
+      to upload it and allow us to process it as described above.
+    </p>
+  </section>
+
+  <section class="legal__section">
+    <h2>WebMCP site tools</h2>
+    <p>
+      On the signed-in app page, Sardrobe registers WebMCP site tools with
+      compatible browsers. A browser agent may use them to read wardrobe data,
+      images, import drafts, outfits, and packing plans, or to create, edit,
+      submit, discard, and permanently delete content through your authenticated
+      browser session. Sardrobe does not run a separate agent relay.
+    </p>
+    <p>
+      Agent calls use the same authentication, ownership checks, validation,
+      rate limits, and other safeguards as actions taken through the interface.
+      Some destructive operations require a <code>confirm: true</code> tool parameter.
+      That parameter is a technical safeguard, not a promise that your agent will
+      display a confirmation prompt; your chosen agent client controls its
+      approval experience.
+    </p>
+    <p>
+      You are responsible for the browsers, agents, model providers, permissions,
+      and instructions you choose. Actions they take through your
+      account are treated as actions authorized by you. Review their privacy and
+      security terms and grant only the access you intend. Sardrobe does not control
+      data after you direct it to a third-party agent or model provider.
+    </p>
+  </section>
+
+  <section class="legal__section">
+    <h2>Acceptable use</h2>
+    <p>When using Sardrobe, you agree not to:</p>
+    <ul>
+      <li>Break the law or infringe anyone's rights.</li>
+      <li>Upload malicious, harmful, or illegal content.</li>
+      <li>
+        Attempt to disrupt, reverse engineer, or gain unauthorized access to the
+        hosted service or other users' data, except to the extent a restriction
+        on reverse engineering is prohibited by law.
+      </li>
+      <li>Misuse the service in a way that harms Sardrobe or other people.</li>
+      <li>
+        Use automated tools in a way that exceeds documented limits, bypasses
+        safeguards, or unreasonably burdens the service.
+      </li>
+    </ul>
+  </section>
+
+  <section class="legal__section">
+    <h2>Third-party services and links</h2>
+    <p>
+      Sardrobe relies on services such as Google, Cloudflare, and Sentry. Their
+      services may be governed by their own
+      terms and privacy policies. External links, including Buy Me a Coffee,
+      take you to services we do not control. Sardrobe is not responsible for
+      third-party services, content, availability, or data practices.
+    </p>
+  </section>
+
+  <section class="legal__section">
+    <h2>Sardrobe materials</h2>
+    <p>
+      Other than your content and third-party materials, the service's branding,
+      design, text, software, and other materials are protected by intellectual
+      property laws and are owned by Sardrobe's operator or licensors. These
+      terms give you a limited, personal, non-exclusive, revocable right to use
+      the service as intended. Open-source components remain governed by their
+      stated licenses.
+    </p>
+  </section>
+
+  <section class="legal__section">
+    <h2>Deletion and termination</h2>
+    <p>
+      You can stop using Sardrobe at any time. You can also permanently delete
+      your account from the account menu. After a successful request, your
+      active account, wardrobe items, outfits, packing plans, and stored cutouts
+      are removed and cannot be restored through Sardrobe. Limited recovery
+      copies and security, authentication, or diagnostic records may remain for
+      the periods described in the Privacy Policy.
+    </p>
+    <p>
+      We may suspend or terminate access if you violate these terms, create
+      security or legal risk, or misuse the service. Where practical, we will
+      give notice, but we may act immediately when reasonably necessary to
+      protect the service or others. Sections that by their nature should
+      survive termination will remain effective.
+    </p>
+  </section>
+
+  <section class="legal__section">
+    <h2>Availability and warranties</h2>
+    <p>
+      We work to keep Sardrobe running, but we can't guarantee it will always be
+      available, uninterrupted, secure, or error-free. To the fullest extent
+      permitted by law, the service is provided "as is" and "as available,"
+      without express or implied warranties, including warranties of
+      merchantability, fitness for a particular purpose, title, and
+      non-infringement. Please keep your own copies of photos or information
+      that matter to you.
+    </p>
+  </section>
+
+  <section class="legal__section">
+    <h2>Limitation of liability</h2>
+    <p>
+      To the fullest extent permitted by law, Sardrobe is not liable for any
+      indirect, incidental, special, exemplary, punitive, or consequential
+      damages, or for lost data, profits, goodwill, or opportunities, arising
+      from the service. Some jurisdictions do not allow certain exclusions or
+      limits, so parts of this section may not apply to you.
+    </p>
+  </section>
+
+  <section class="legal__section">
+    <h2>Indemnity</h2>
+    <p>
+      To the extent permitted by law, you agree to defend and indemnify
+      Sardrobe's operator from third-party claims, losses, and reasonable costs
+      arising from your unlawful content, your misuse of the service, or your
+      material violation of these terms. This does not require you to indemnify
+      us for our own unlawful conduct.
+    </p>
+  </section>
+
+  <section class="legal__section">
+    <h2>Changes to these terms</h2>
+    <p>
+      We may update these terms from time to time. When we do, we'll revise the
+      "Last updated" date above. If a change is material, we will provide
+      additional notice where appropriate. Continuing to use Sardrobe after the
+      updated terms take effect means you accept them.
+    </p>
+  </section>
+
+  <section class="legal__section">
+    <h2>General terms</h2>
+    <p>
+      These terms and the Privacy Policy are the entire agreement between you
+      and Sardrobe concerning the service. If any provision is unenforceable,
+      the remaining provisions remain effective. A failure to enforce a
+      provision is not a waiver. You may not transfer these terms without our
+      consent; we may transfer them as part of a reorganization, financing,
+      merger, acquisition, or sale of the service.
+    </p>
+    <p>
+      These terms are governed by the laws of the U.S. state in which Sardrobe's
+      operator is principally located, without regard to conflict-of-law rules,
+      except where the mandatory law of your location provides otherwise.
+    </p>
+  </section>
+
+  <section class="legal__section">
+    <h2>Contact</h2>
+    <p>
+      Questions about these terms? Email us at
+      <ObfuscatedEmail user="omarkawach" domain="outlook" tld="com" />.
+    </p>
+  </section>
+
+  <p class="legal__note">
+    We've kept this in plain language so it's easy to follow. If anything is
+    unclear or you'd like to know more about how your data is handled, just
+    reach out. We're happy to help.
+  </p>
+</LegalLayout>

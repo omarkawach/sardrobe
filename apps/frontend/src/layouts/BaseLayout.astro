@@ -1,0 +1,132 @@
+---
+import { ClientRouter } from 'astro:transitions'
+import { SEO, type SEOProps } from 'astro-seo'
+import '../styles/app.css'
+
+interface Props {
+  title?: string
+  description?: string
+  canonical?: SEOProps['canonical']
+  noindex?: boolean
+  nofollow?: boolean
+  openGraph?: SEOProps['openGraph']
+  twitter?: SEOProps['twitter']
+}
+
+const {
+  title = 'Sardrobe | A private wardrobe planner for the pieces you already own',
+  description = 'Sardrobe is a fashion-first digital wardrobe workspace for item capture, outfit boards, and capsule planning without social feeds or shopping noise.',
+  canonical,
+  noindex = false,
+  nofollow = false,
+  openGraph,
+  twitter,
+} = Astro.props
+
+const siteUrl = new URL('/', Astro.site ?? Astro.url).toString()
+const logoUrl = new URL('/logo.png', siteUrl).toString()
+const productHuntUrl = 'https://www.producthunt.com/products/sardrobe'
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': `${siteUrl}#organization`,
+      name: 'Sardrobe',
+      url: siteUrl,
+      logo: logoUrl,
+      sameAs: [productHuntUrl],
+    },
+    {
+      '@type': 'WebSite',
+      '@id': `${siteUrl}#website`,
+      name: 'Sardrobe',
+      url: siteUrl,
+      publisher: {
+        '@id': `${siteUrl}#organization`,
+      },
+    },
+    {
+      '@type': 'WebApplication',
+      '@id': `${siteUrl}#application`,
+      name: 'Sardrobe',
+      url: siteUrl,
+      description: 'An open-source digital wardrobe for clothing cutouts, outfit planning, and packing lists.',
+      applicationCategory: 'LifestyleApplication',
+      operatingSystem: 'Web',
+      isAccessibleForFree: true,
+      offers: {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'USD',
+      },
+      publisher: {
+        '@id': `${siteUrl}#organization`,
+      },
+      sameAs: [productHuntUrl],
+    },
+  ],
+}
+---
+
+<!doctype html>
+<html lang="en" data-theme="light" class="sardrobe-light sardrobe-style-fluent">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <SEO
+      title={title}
+      description={description}
+      canonical={canonical}
+      noindex={noindex}
+      nofollow={nofollow}
+      robotsExtras="max-image-preview:large"
+      openGraph={openGraph}
+      twitter={twitter}
+      extend={{
+        link: [
+          { rel: 'icon', type: 'image/x-icon', sizes: '32x32', href: '/favicon.ico' },
+          { rel: 'icon', type: 'image/x-icon', sizes: '16x16', href: '/favicon-16x16.ico' },
+          { rel: 'apple-touch-icon', href: '/logo.png' },
+          { rel: 'sitemap', type: 'application/xml', href: '/sitemap-index.xml' },
+        ],
+        meta: [
+          { name: 'application-name', content: 'Sardrobe' },
+        ],
+      }}
+    />
+    <meta name="generator" content={Astro.generator} />
+    <slot name="head" />
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+    <script is:inline>
+      // Array.prototype.at is ES2022 (missing in Safari < 15.4, Chrome < 92) but is
+      // called by Cloudflare's injected RUM beacon and Sentry's INP instrumentation.
+      if (!Array.prototype.at) {
+        Object.defineProperty(Array.prototype, 'at', {
+          value: function at(index) {
+            const n = Math.trunc(index) || 0
+            const i = n < 0 ? this.length + n : n
+            return i >= 0 && i < this.length ? this[i] : undefined
+          },
+          writable: true,
+          configurable: true,
+        })
+      }
+    </script>
+    <ClientRouter fallback="animate" />
+    <script is:inline>
+      ;(() => {
+        const stored = localStorage.getItem('sardrobe-theme-preference')
+        const theme = stored === 'light' || stored === 'dark' ? stored : 'light'
+
+        document.documentElement.setAttribute('data-theme', theme)
+        document.documentElement.classList.toggle('sardrobe-light', theme === 'light')
+        document.documentElement.classList.toggle('sardrobe-dark', theme === 'dark')
+      })()
+    </script>
+  </head>
+  <body class="site-body">
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <slot />
+  </body>
+</html>
