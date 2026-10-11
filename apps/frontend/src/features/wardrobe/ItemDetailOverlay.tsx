@@ -1,5 +1,6 @@
 import {
   Button,
+  Form,
   Dialog,
   DialogBackdrop,
   DialogClose,
@@ -18,16 +19,9 @@ import {
 } from '@sardrobe/react-components'
 import { EditableNameTitle } from '../../components/closet/EditableNameTitle'
 import { ClosetIcon } from '../../components/closet/ClosetIcon'
-import { WardrobeMultiSelect, WardrobeSelect, toSelectOptions } from '../../components/closet/FormControls'
+import { WardrobeDetailsFields, readWardrobeForm } from '../../components/closet/FormControls'
 import { ZoomableImage } from '../shared/ZoomableImage'
 import {
-  arrayToCsv,
-  categories,
-  COLORS,
-  csvToArray,
-  OCCASIONS,
-  SEASONS,
-  SUBCATEGORIES_BY_CATEGORY,
   type DetailState,
   type WardrobeFormState,
   type WardrobeItem,
@@ -36,12 +30,12 @@ import {
 type ItemDetailOverlayProps = {
   closeItemDialog: () => void
   confirmingDelete: boolean
-  deleteSelectedItem: () => void
+  deleteSelectedItem: () => Promise<string | null | undefined>
   detailMessage: string
   detailState: DetailState
   editForm: WardrobeFormState
   isMobileViewport: boolean
-  saveSelectedItem: () => void
+  saveSelectedItem: (form?: WardrobeFormState) => Promise<WardrobeItem | null>
   selectedCreatedDate: string | null
   selectedItem: WardrobeItem | null
   selectedUpdatedDate: string | null
@@ -71,8 +65,10 @@ export function ItemDetailOverlay(props: ItemDetailOverlayProps) {
                           value={editForm.name}
                           fallback={selectedItem.name || 'Untitled wardrobe item'}
                           label="Item name"
-                          name="edit-name"
+                          name="name"
+                          form={`wardrobe-item-form-${selectedItem.id}`}
                           disabled={detailState === 'saving' || detailState === 'deleting'}
+                          pendingSubmit={detailState === 'saving' || detailState === 'deleting'}
                           onChange={(value) => updateEditForm('name', value)}
                           renderTitle={(className, children, title) => (
                             <DrawerTitle className={`${className} closet-detail-drawer__title`} title={title}>
@@ -112,8 +108,10 @@ export function ItemDetailOverlay(props: ItemDetailOverlayProps) {
                     value={editForm.name}
                     fallback={selectedItem.name || 'Untitled wardrobe item'}
                     label="Item name"
-                    name="edit-name"
+                    name="name"
+                    form={`wardrobe-item-form-${selectedItem.id}`}
                     disabled={detailState === 'saving' || detailState === 'deleting'}
+                    pendingSubmit={detailState === 'saving' || detailState === 'deleting'}
                     onChange={(value) => updateEditForm('name', value)}
                     renderTitle={(className, children, title) => (
                       <DialogTitle className={`${className} closet-dialog__title`} title={title}>
@@ -176,11 +174,25 @@ function ItemDetailBody({
         )}
       </div>
 
-      <form
+      <Form
+        key={selectedItem.id}
+        id={`wardrobe-item-form-${selectedItem.id}`}
+        toolname={detailState === 'loading' ? undefined : 'wardrobe_item_mutate'}
+        actions={['update', 'delete']} defaultAction="update" confirmActions={['delete']} skipValidationActions={['delete']}
+        tooldescription={`Change wardrobe item ${selectedItem.id}. action "update" (the default) saves its name and metadata directly with no confirmation. action "delete" permanently removes this item and its cutout and requires confirm: true. Only set fields you are changing; omitted fields keep their current values. Category, subcategory, color, occasion, and season must use the allowed values, and subcategory must belong to the chosen category. Pass [] to clear occasions or seasons and an empty string to clear optional text. Inspect wardrobe_item_image before guessing visual attributes; do not invent values. Returns the updated item.`}
+        tooltitle="Change a wardrobe item"
+        toolautosubmit=""
         className="closet-dialog__form"
-        onSubmit={(event) => {
-          event.preventDefault()
-          saveSelectedItem()
+        onSubmitError={setDetailMessage}
+        onSubmit={async (data, { action, fields }) => {
+          if (action === 'delete') {
+            const itemId = await deleteSelectedItem()
+            if (!itemId) throw new Error('Could not delete this item. Try again.')
+            return { kind: 'wardrobe.item_deleted', itemId }
+          }
+          const item = await saveSelectedItem(readWardrobeForm(data, editForm, fields))
+          if (!item) throw new Error('Could not save this item. Check its details and try again.')
+          return { kind: 'wardrobe.item_updated', item }
         }}
       >
         <div className="closet-dialog__meta">
@@ -188,71 +200,7 @@ function ItemDetailBody({
           {selectedUpdatedDate ? <span>Updated {selectedUpdatedDate}</span> : null}
         </div>
 
-        <div className="closet-details__row">
-          <div className="closet-field">
-            <span>Category</span>
-            <WardrobeSelect
-              value={editForm.category}
-              onValueChange={(value) => updateEditForm('category', value)}
-              placeholder="Select category"
-              options={toSelectOptions(categories)}
-              ariaLabel="Category"
-            />
-          </div>
-          <div className="closet-field">
-            <span>Subcategory</span>
-            <WardrobeSelect
-              value={editForm.subcategory}
-              onValueChange={(value) => updateEditForm('subcategory', value)}
-              placeholder={
-                (SUBCATEGORIES_BY_CATEGORY[editForm.category] ?? []).length === 0
-                  ? 'Pick a category first'
-                  : 'Select subcategory'
-              }
-              options={toSelectOptions(SUBCATEGORIES_BY_CATEGORY[editForm.category] ?? [])}
-              ariaLabel="Subcategory"
-            />
-          </div>
-        </div>
-
-        <div className="closet-field">
-          <span>Color</span>
-          <WardrobeSelect
-            value={editForm.color}
-            onValueChange={(value) => updateEditForm('color', value)}
-            placeholder="Select color"
-            options={toSelectOptions(COLORS)}
-            ariaLabel="Color"
-          />
-        </div>
-
-        <div className="closet-details__row">
-          <div className="closet-field">
-            <span>Season</span>
-            <WardrobeMultiSelect
-              value={csvToArray(editForm.season)}
-              onValueChange={(values) => updateEditForm('season', arrayToCsv(values))}
-              placeholder="Select seasons"
-              options={SEASONS}
-              ariaLabel="Season"
-            />
-          </div>
-          <div className="closet-field">
-            <span>Occasion</span>
-            <WardrobeMultiSelect
-              value={csvToArray(editForm.occasion)}
-              onValueChange={(values) => updateEditForm('occasion', arrayToCsv(values))}
-              placeholder="Select occasions"
-              options={OCCASIONS}
-              ariaLabel="Occasion"
-            />
-          </div>
-        </div>
-
-        <label className="closet-field">
-          <span>Notes</span>
-          <textarea name="edit-notes" value={editForm.notes} onChange={(event) => updateEditForm('notes', event.target.value)} rows={3} />
-        </label>
+        <WardrobeDetailsFields form={editForm} onChange={updateEditForm} />
 
         <p className={`closet-dialog__message closet-dialog__message--${detailState}`} role="status" aria-live="polite">
           {detailMessage}
@@ -269,7 +217,7 @@ function ItemDetailBody({
               }}>
                 Cancel
               </Button>
-              <Button type="button" color="destructive" onClick={deleteSelectedItem}>
+              <Button type="submit" name="intent" value="delete" color="destructive">
                 {detailState === 'deleting' ? 'Deleting...' : 'Delete item'}
               </Button>
             </div>
@@ -277,14 +225,14 @@ function ItemDetailBody({
         ) : null}
 
         <div className="closet-dialog__actions">
-          <Button type="submit" color="primary" disabled={detailState === 'saving'}>
+          <Button type="submit" color="primary" disabled={detailState === 'saving' || detailState === 'loading' || detailState === 'deleting'}>
             {detailState === 'saving' ? 'Saving...' : 'Save changes'}
           </Button>
-          <Button type="button" variant="outline" color="destructive" onClick={deleteSelectedItem} disabled={detailState === 'deleting'}>
+          <Button type="button" variant="outline" color="destructive" onClick={() => { setConfirmingDelete(true); setDetailMessage('Confirm delete.') }} disabled={detailState === 'deleting'}>
             Delete
           </Button>
         </div>
-      </form>
+      </Form>
     </div>
   )
 }

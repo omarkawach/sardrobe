@@ -362,6 +362,9 @@ importers:
       react-dom:
         specifier: 'catalog:'
         version: 19.2.8(react@19.2.8)
+      webmcp-polyfill:
+        specifier: github:webmachinelearning/webmcp-polyfill#fba7a2539fab11e0d3b084f8148dd4fac11a8319
+        version: https://codeload.github.com/webmachinelearning/webmcp-polyfill/tar.gz/fba7a2539fab11e0d3b084f8148dd4fac11a8319
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -372,6 +375,9 @@ importers:
       '@astrojs/react':
         specifier: 'catalog:'
         version: 6.0.4(@types/node@26.4.0)(@types/react-dom@19.2.5(@types/react@19.2.18))(@types/react@19.2.18)(esbuild@0.28.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(supports-color@10.2.2)(tsx@4.23.12)(yaml@2.9.0)
+      '@playwright/test':
+        specifier: 'catalog:'
+        version: 1.62.1
       '@types/node':
         specifier: 'catalog:'
         version: 26.4.0
@@ -381,6 +387,9 @@ importers:
       '@types/react-dom':
         specifier: 'catalog:'
         version: 19.2.5(@types/react@19.2.18)
+      esbuild:
+        specifier: 'catalog:'
+        version: 0.28.2
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -391,8 +400,8 @@ importers:
         specifier: 'catalog:'
         version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@26.4.0)(@vitest/browser-playwright@4.1.11)(@vitest/coverage-v8@4.1.11)(vite@8.2.2(@types/node@26.4.0)(esbuild@0.28.2)(tsx@4.23.12)(yaml@2.9.0))
       webmcp-types:
-        specifier: 0.1.5
-        version: 0.1.5
+        specifier: 0.1.10
+        version: 0.1.10
       wrangler:
         specifier: 4.127.0
         version: 4.127.0(@cloudflare/workers-types@4.20260702.1)
@@ -5922,8 +5931,12 @@ packages:
   webidl-conversions@3.0.1:
     resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}
 
-  webmcp-types@0.1.5:
-    resolution: {integrity: sha512-QAfuzNJ+hiY2JLpPbD/6xZruLQlsqtWUDqQCRruqD0dbtZHDg6IUZ2K0zctlRokwuscGlr47i6hKv8mQPSQLhw==}
+  webmcp-polyfill@https://codeload.github.com/webmachinelearning/webmcp-polyfill/tar.gz/fba7a2539fab11e0d3b084f8148dd4fac11a8319:
+    resolution: {gitHosted: true, integrity: sha512-KeWPfrViGvP8P96tDAsDvuqhKKtGc91VzgCOKL9gcEUFz4OT6nPos/kYLd00HgZ+YLc6YcqU9kLP9hqoeeVDBg==, tarball: https://codeload.github.com/webmachinelearning/webmcp-polyfill/tar.gz/fba7a2539fab11e0d3b084f8148dd4fac11a8319}
+    version: 0.1.0
+
+  webmcp-types@0.1.10:
+    resolution: {integrity: sha512-U4GQ1RpJ0tqCUt2ALMV9Pnhi+hsy8L31f/Q1v4mLVhW64r5sYhh+2+SjP/Lq4/9jP33vZgNkuRZARJl65A/ZIg==}
 
   webpack-virtual-modules@0.6.2:
     resolution: {integrity: sha512-66/V2i5hQanC51vBQKPH4aI8NMAcBW59FVBs+rC7eGHupMyfn34q7rZIE+ETlJ+XTevqfUhVVBgSUNSW2flEUQ==}
@@ -10942,7 +10955,11 @@ snapshots:
 
   webidl-conversions@3.0.1: {}
 
-  webmcp-types@0.1.5: {}
+  webmcp-polyfill@https://codeload.github.com/webmachinelearning/webmcp-polyfill/tar.gz/fba7a2539fab11e0d3b084f8148dd4fac11a8319:
+    dependencies:
+      webmcp-types: 0.1.10
+
+  webmcp-types@0.1.10: {}
 
   webpack-virtual-modules@0.6.2: {}
 

@@ -1,3 +1,4 @@
+import { readPackingForm } from '../../components/closet/FormControls'
 import {
   Button,
   Checkbox,
@@ -15,8 +16,9 @@ import {
   DrawerPortal,
   DrawerTitle,
   DrawerViewport,
-  Field,
   Input,
+  Form,
+  Select,
   Tooltip,
   TooltipArrow,
   TooltipPopup,
@@ -24,8 +26,9 @@ import {
   TooltipPositioner,
   TooltipTrigger,
 } from '@sardrobe/react-components'
-import { Pencil, Plus, Search, Trash2, X } from 'lucide-react'
+import { Plus, Search, Trash2, X } from 'lucide-react'
 import { useEffect, useEffectEvent, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
+import { EditableNameTitle } from '../../components/closet/EditableNameTitle'
 import { WardrobeSelect } from '../../components/closet/FormControls'
 import { ClosetEmptyState, ClosetPanel } from '../../components/closet/ClosetPrimitives'
 import { Canvas } from '../outfits/OutfitCanvas'
@@ -77,8 +80,8 @@ type PackingViewProps = {
 }
 
 export type PackingAgentEvent =
-  | { sequence: number; type: 'created' | 'updated'; plan: PackingPlan }
-  | { sequence: number; type: 'deleted'; planId: string }
+  | { sequence: number; type: 'edit'; plan: PackingPlan }
+  | { sequence: number; type: 'create' }
 
 export function PackingView({ agentEvent, items, isMobileViewport, localAiStatus, onAgentEventHandled, onLocalAiStatusChange, privateAiEnabled }: PackingViewProps) {
   const [plans, setPlans] = useState<PackingPlanSummary[]>([])
@@ -101,9 +104,9 @@ export function PackingView({ agentEvent, items, isMobileViewport, localAiStatus
   const [statusMessage, setStatusMessage] = useState('')
   const [editingTitle, setEditingTitle] = useState(false)
   const [initialAgentPlanId] = useState(() => (
-    agentEvent && agentEvent.type !== 'deleted' ? agentEvent.plan.id : null
+    agentEvent && agentEvent.type === 'edit' ? agentEvent.plan.id : null
   ))
-  const titleInputRef = useRef<HTMLInputElement | null>(null)
+  const selectionVersionRef = useRef(0)
   const loadInitialPlanDetail = useEffectEvent((planId: string) => (
     loadPlanDetail(planId, { announceSelection: false })
   ))
@@ -112,6 +115,7 @@ export function PackingView({ agentEvent, items, isMobileViewport, localAiStatus
     let active = true
 
     async function load() {
+      const selectionVersion = selectionVersionRef.current
       setGalleryState('loading')
       setGalleryError('')
       setOutfitLoadError('')
@@ -132,10 +136,10 @@ export function PackingView({ agentEvent, items, isMobileViewport, localAiStatus
         return
       }
 
-      setPlans(planResult)
+      setPlans((current) => [...current, ...planResult.filter((plan) => !current.some((saved) => saved.id === plan.id))])
       setGalleryState('idle')
 
-      if (planResult.length > 0 && !initialAgentPlanId) {
+      if (planResult.length > 0 && !initialAgentPlanId && selectionVersionRef.current === selectionVersion) {
         await loadInitialPlanDetail(planResult[0]!.id)
       }
     }
@@ -149,32 +153,13 @@ export function PackingView({ agentEvent, items, isMobileViewport, localAiStatus
 
   useEffect(() => {
     if (!agentEvent) return
-
-    if (agentEvent.type === 'deleted') {
-      setPlans((current) => current.filter((plan) => plan.id !== agentEvent.planId))
-
-      if (selectedPlanId === agentEvent.planId || selectedPlan?.id === agentEvent.planId) {
-        setSelectedPlan(null)
-        setSelectedPlanId(null)
-        setForm(initialPackingPlanForm)
-        setDraftOutfitIds([])
-        setDraftItemIds([])
-        setEditingTitle(false)
-        setConfirmingDelete(false)
-        setMobileView('plans')
-      }
-
-      setIsCreating(false)
-      setAddMode(null)
-      setDetailState('idle')
-      setDetailError('')
-      setGalleryState('idle')
-      setGalleryError('')
-      setStatusMessage('Packing plan deleted by agent.')
+    if (agentEvent.type === 'create') {
+      openCreatePlan()
       onAgentEventHandled(agentEvent.sequence)
       return
     }
 
+    selectionVersionRef.current += 1
     applyPlan(agentEvent.plan)
     setIsCreating(false)
     setEditingTitle(false)
@@ -185,7 +170,7 @@ export function PackingView({ agentEvent, items, isMobileViewport, localAiStatus
     setGalleryState('idle')
     setGalleryError('')
     setMobileView('checklist')
-    setStatusMessage(agentEvent.type === 'created' ? 'Packing plan created by agent.' : 'Packing plan updated by agent.')
+    setStatusMessage(`Opened ${agentEvent.plan.plan}.`)
     onAgentEventHandled(agentEvent.sequence)
   }, [agentEvent, onAgentEventHandled, selectedPlan, selectedPlanId])
 
@@ -203,12 +188,6 @@ export function PackingView({ agentEvent, items, isMobileViewport, localAiStatus
     setMobileView('checklist')
     setStatusMessage('AI filled this packing plan. Review it before saving.')
   }
-
-  useEffect(() => {
-    if (!editingTitle && !isCreating) return
-    titleInputRef.current?.focus()
-    titleInputRef.current?.select()
-  }, [editingTitle, isCreating, selectedPlanId])
 
   const selectedOutfitIds = useMemo(
     () => new Set(isCreating ? draftOutfitIds : selectedPlan?.outfits.map((row) => row.outfit.id) ?? []),
@@ -270,6 +249,7 @@ export function PackingView({ agentEvent, items, isMobileViewport, localAiStatus
   }
 
   async function loadPlanDetail(planId: string, options: { announceSelection?: boolean } = {}) {
+    const selectionVersion = ++selectionVersionRef.current
     setSelectedPlanId(planId)
     setIsCreating(false)
     setDraftOutfitIds([])
@@ -281,6 +261,7 @@ export function PackingView({ agentEvent, items, isMobileViewport, localAiStatus
     setMobileView('checklist')
 
     const result = await fetchPackingPlan(planId)
+    if (selectionVersionRef.current !== selectionVersion) return
 
     if ('error' in result) {
       setDetailState('error')
@@ -295,6 +276,7 @@ export function PackingView({ agentEvent, items, isMobileViewport, localAiStatus
   }
 
   function openCreatePlan() {
+    selectionVersionRef.current += 1
     setIsCreating(true)
     setEditingTitle(true)
     setSelectedPlanId(null)
@@ -309,26 +291,27 @@ export function PackingView({ agentEvent, items, isMobileViewport, localAiStatus
     setMobileView('checklist')
   }
 
-  async function savePlan() {
-    if (!form.plan.trim() || detailState === 'saving') {
-      setDetailError('Plan is required.')
-      setEditingTitle(true)
-      return
-    }
-
+  async function savePlan(submittedForm: PackingPlanFormState, rows = { outfitIds: draftOutfitIds, itemIds: draftItemIds }) {
+    if (detailState === 'loading' || detailState === 'deleting') return null
+    const selectionVersion = selectionVersionRef.current
     setDetailState('saving')
     setDetailError('')
     setStatusMessage(isCreating ? 'Creating packing plan...' : 'Saving packing plan...')
 
     const result = isCreating || !selectedPlan
-      ? await createPackingPlan(form, { outfitIds: draftOutfitIds, itemIds: draftItemIds })
-      : await updatePackingPlan(selectedPlan.id, form)
+      ? await createPackingPlan(submittedForm, rows)
+      : await updatePackingPlan(selectedPlan.id, submittedForm)
 
+    if (selectionVersionRef.current !== selectionVersion) {
+      if ('error' in result) return null
+      setPlans((current) => [packingSummaryFromPlan(result), ...current.filter((plan) => plan.id !== result.id)])
+      return result
+    }
     if ('error' in result) {
       setDetailState('error')
       setDetailError(result.error)
       setStatusMessage(`Couldn't save packing plan: ${result.error}`)
-      return
+      throw new Error(result.error)
     }
 
     applyPlan(result)
@@ -336,10 +319,11 @@ export function PackingView({ agentEvent, items, isMobileViewport, localAiStatus
     setEditingTitle(false)
     setDetailState('idle')
     setStatusMessage(isCreating ? 'Packing plan created.' : 'Packing plan saved.')
+    return result
   }
 
   async function deleteSelectedPlan() {
-    if (!selectedPlan || detailState === 'deleting') return
+    if (!selectedPlan || detailState === 'deleting') return null
 
     setDetailState('deleting')
     setDetailError('')
@@ -351,7 +335,7 @@ export function PackingView({ agentEvent, items, isMobileViewport, localAiStatus
       setDetailState('error')
       setDetailError(result.error)
       setStatusMessage(`Couldn't delete packing plan: ${result.error}`)
-      return
+      throw new Error(result.error)
     }
 
     const remaining = plans.filter((plan) => plan.id !== selectedPlan.id)
@@ -367,10 +351,11 @@ export function PackingView({ agentEvent, items, isMobileViewport, localAiStatus
     setStatusMessage('Packing plan deleted.')
 
     if (remaining[0]) {
-      await loadPlanDetail(remaining[0].id)
+      void loadPlanDetail(remaining[0].id)
     } else {
       setMobileView('plans')
     }
+    return selectedPlan.id
   }
 
   async function addOutfitToPlan(outfitId: string) {
@@ -383,8 +368,7 @@ export function PackingView({ agentEvent, items, isMobileViewport, localAiStatus
 
     if (!selectedPlan) return
     setStatusMessage('Adding outfit...')
-    const result = await addPackingOutfits(selectedPlan.id, [outfitId])
-    handlePlanMutationResult('error' in result ? result : await reconcilePackedStatus(result), 'Outfit added.')
+    return addRows('outfits', [outfitId])
   }
 
   async function addItemToPlan(itemId: string) {
@@ -397,8 +381,7 @@ export function PackingView({ agentEvent, items, isMobileViewport, localAiStatus
 
     if (!selectedPlan) return
     setStatusMessage('Adding wardrobe item...')
-    const result = await addPackingItems(selectedPlan.id, [itemId])
-    handlePlanMutationResult('error' in result ? result : await reconcilePackedStatus(result), 'Wardrobe item added.')
+    return addRows('items', [itemId])
   }
 
   function removeDraftOutfit(outfitId: string) {
@@ -417,40 +400,81 @@ export function PackingView({ agentEvent, items, isMobileViewport, localAiStatus
     if (!selectedPlan) return
     setStatusMessage(packed ? 'Marking outfit packed...' : 'Marking outfit unpacked...')
     const result = await togglePackingOutfit(selectedPlan.id, row.id, packed)
-    handlePlanMutationResult('error' in result ? result : await reconcilePackedStatus(result), packed ? 'Outfit packed.' : 'Outfit unpacked.')
+    return handlePlanMutationResult('error' in result ? result : await reconcilePackedStatus(result), packed ? 'Outfit packed.' : 'Outfit unpacked.')
   }
 
   async function toggleItem(row: PackingPlanItem, packed: boolean) {
     if (!selectedPlan) return
     setStatusMessage(packed ? 'Marking item packed...' : 'Marking item unpacked...')
     const result = await togglePackingItem(selectedPlan.id, row.id, packed)
-    handlePlanMutationResult('error' in result ? result : await reconcilePackedStatus(result), packed ? 'Item packed.' : 'Item unpacked.')
+    return handlePlanMutationResult('error' in result ? result : await reconcilePackedStatus(result), packed ? 'Item packed.' : 'Item unpacked.')
   }
 
   async function removeOutfit(row: PackingPlanOutfit) {
     if (!selectedPlan) return
     setStatusMessage('Removing outfit...')
     const result = await removePackingOutfit(selectedPlan.id, row.id)
-    handlePlanMutationResult('error' in result ? result : await reconcilePackedStatus(result), 'Outfit removed.')
+    return handlePlanMutationResult('error' in result ? result : await reconcilePackedStatus(result), 'Outfit removed.')
   }
 
   async function removeItem(row: PackingPlanItem) {
     if (!selectedPlan) return
     setStatusMessage('Removing wardrobe item...')
     const result = await removePackingItem(selectedPlan.id, row.id)
-    handlePlanMutationResult('error' in result ? result : await reconcilePackedStatus(result), 'Wardrobe item removed.')
+    return handlePlanMutationResult('error' in result ? result : await reconcilePackedStatus(result), 'Wardrobe item removed.')
   }
 
   function handlePlanMutationResult(result: PackingPlan | { error: string }, successMessage: string) {
     if ('error' in result) {
       setDetailError(result.error)
       setStatusMessage(result.error)
-      return
+      return result
     }
 
     applyPlan(result)
     setDetailError('')
     setStatusMessage(successMessage)
+    return result
+  }
+
+  async function addRows(kind: 'outfits' | 'items', ids: string[]) {
+    if (!selectedPlan || !ids.length) return null
+    const result = await (kind === 'outfits' ? addPackingOutfits : addPackingItems)(selectedPlan.id, ids)
+    return handlePlanMutationResult('error' in result ? result : await reconcilePackedStatus(result), kind === 'outfits' ? 'Outfits added.' : 'Wardrobe items added.')
+  }
+
+  async function submitPlan(data: FormData, action: string) {
+    if (action === 'save' || action === 'create' || action === 'update') {
+      if (action === 'create' && !isCreating) throw new Error('Open a new plan with packing_plans action "new" before creating it.')
+      if (action === 'update' && isCreating) throw new Error('Get an existing plan before updating it.')
+      const creating = isCreating
+      const plan = await savePlan(readPackingForm(data), { outfitIds: data.getAll('outfitIds').map(String), itemIds: data.getAll('itemIds').map(String) })
+      if (!plan) throw new Error('Could not save the packing plan. Check its details and try again.')
+      return { kind: creating ? 'packing.created' : 'packing.updated', plan }
+    }
+    if (!selectedPlan) throw new Error('Save or get a packing plan before changing its checklist.')
+    if (action === 'delete') {
+      const planId = await deleteSelectedPlan()
+      if (!planId) throw new Error('Could not delete the packing plan.')
+      return { kind: 'packing.deleted', planId }
+    }
+    const rowId = String(data.get('rowId') ?? '')
+    const outfit = selectedPlan.outfits.find((row) => row.id === rowId)
+    const item = selectedPlan.items.find((row) => row.id === rowId)
+    const packed = data.get('packed') === 'yes'
+    const operations = {
+      add_outfits: () => addRows('outfits', data.getAll('outfitIds').map(String)),
+      add_items: () => addRows('items', data.getAll('itemIds').map(String)),
+      remove_outfit: () => outfit ? removeOutfit(outfit) : null,
+      remove_item: () => item ? removeItem(item) : null,
+      set_outfit_packed: () => outfit ? toggleOutfit(outfit, packed) : null,
+      set_item_packed: () => item ? toggleItem(item, packed) : null,
+    }
+    const operation = operations[action as keyof typeof operations]
+    const plan = operation ? await operation() : null
+    if (!plan) throw new Error('Choose valid checklist IDs and try again.')
+    if ('error' in plan) throw new Error(plan.error)
+    return { kind: { add_outfits: 'packing.outfits_added', add_items: 'packing.items_added', remove_outfit: 'packing.outfit_removed', remove_item: 'packing.item_removed', set_outfit_packed: 'packing.outfit_packed', set_item_packed: 'packing.item_packed' }[action], plan }
   }
 
   function handleTitleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
@@ -463,7 +487,6 @@ export function PackingView({ agentEvent, items, isMobileViewport, localAiStatus
   const activeDetail = isCreating || selectedPlan !== null
   const planCountLabel = `${plans.length} ${plans.length === 1 ? 'plan' : 'plans'}`
   const titleDisplay = form.plan.trim() || (isCreating ? 'New packing plan' : selectedPlan?.plan ?? 'Untitled packing plan')
-  const titleIsEditable = editingTitle
   const detailSubtitle = selectedPlan
     ? `${selectedPlan.packedCount}/${selectedPlan.totalCount} packed`
     : draftTotalCount > 0
@@ -500,7 +523,7 @@ export function PackingView({ agentEvent, items, isMobileViewport, localAiStatus
             <h1 id="packing-title">Packing list</h1>
             <span className="closet-packing__count">{planCountLabel}</span>
           </div>
-          <Button color="primary" type="button" onClick={openCreatePlan} className="closet-packing__new-button">
+          <Button color="primary" type="button" onClick={() => openCreatePlan()} className="closet-packing__new-button">
             <Plus size={16} strokeWidth={1.4} aria-hidden="true" />
             New plan
           </Button>
@@ -538,7 +561,7 @@ export function PackingView({ agentEvent, items, isMobileViewport, localAiStatus
             title="No packing plans yet."
             description="Create one for a trip, gym bag, or repeatable kit."
           >
-            <Button color="primary" type="button" onClick={openCreatePlan}>
+            <Button color="primary" type="button" onClick={() => openCreatePlan()}>
               New plan
             </Button>
           </ClosetEmptyState>
@@ -566,14 +589,24 @@ export function PackingView({ agentEvent, items, isMobileViewport, localAiStatus
         )}
       </ClosetPanel>
 
-      <form
+      <Form
+        toolname={activeDetail && detailState !== 'loading' && galleryState !== 'loading' ? 'packing_plan_mutate' : undefined}
+        actions={['save', 'create', 'update', 'delete', 'add_outfits', 'add_items', 'remove_outfit', 'remove_item', 'set_outfit_packed', 'set_item_packed']}
+        confirmActions={['delete']} skipValidationActions={['delete', 'add_outfits', 'add_items', 'remove_outfit', 'remove_item', 'set_outfit_packed', 'set_item_packed']}
+        tooldescription={isCreating
+          ? 'Create a packing plan. Saves its name, dates, status, and notes directly, together with outfitIds/itemIds selected in this form. action "save" (the default) or "create" creates the new plan. Name is required. Only set fields you are changing; omitted fields keep their current values. Dates are ISO yyyy-mm-dd; end date cannot precede start date. Pass an empty string to clear an optional date or notes. Status must be planning or packed. Returns the saved plan with its checklist rows.'
+          : `Change packing plan ${selectedPlan?.id ?? ''}. Saves its name, dates, status, and notes directly; keeps its existing outfits, items, and packed states. action "save" (the default) or "update" saves metadata; "delete" permanently removes the plan and requires confirm: true; "add_outfits"/"add_items" use outfitIds/itemIds; "remove_outfit"/"remove_item" and "set_outfit_packed"/"set_item_packed" use rowId, with packed: true or false for packed state. Checklist changes keep the overall status in sync. Only set fields you are changing; omitted fields keep their current values. Dates are ISO yyyy-mm-dd; end date cannot precede start date. Pass an empty string to clear an optional date or notes. Status must be planning or packed. Prefer packing_plan_mutate set_outfit_packed or set_item_packed for checking off rows, since those keep the overall status in sync. Returns the saved plan with its checklist rows.`}
+        tooltitle="Change a packing plan"
+        toolautosubmit=""
         className={`closet-panel closet-packing-detail ${isCreating ? 'closet-packing-detail--creating' : ''} ${!activeDetail ? 'closet-packing-detail--empty' : ''}`}
-        onSubmit={(event) => {
-          event.preventDefault()
-          void savePlan()
-        }}
+        onSubmit={(data, { action }) => submitPlan(data, action)}
+        onSubmitError={(message) => { setDetailError(message); setDetailState('error') }}
       >
-        {detailState === 'loading' && !selectedPlan ? (
+        <Select name="outfitIds" multiple formLabel="Outfit IDs to include when creating a plan or adding outfits." formOptions={outfits.map((outfit) => ({ value: outfit.id, label: outfit.name }))} value={isCreating ? draftOutfitIds : undefined} defaultValue={[]} onValueChange={(value) => { if (isCreating) setDraftOutfitIds(value as string[]) }} />
+        <Select name="itemIds" multiple formLabel="Wardrobe item IDs to include when creating a plan or adding items." formOptions={items.map((item) => ({ value: item.id, label: item.name }))} value={isCreating ? draftItemIds : undefined} defaultValue={[]} onValueChange={(value) => { if (isCreating) setDraftItemIds(value as string[]) }} />
+        <Select name="rowId" formLabel="Checklist row ID from packing_plans get, for removing or changing packed state." formOptions={[...(selectedPlan?.outfits ?? []).map((row) => ({ value: row.id, label: row.outfit.name })), ...(selectedPlan?.items ?? []).map((row) => ({ value: row.id, label: row.item.name }))]} defaultValue="" />
+        <input className="sr-only" aria-hidden="true" tabIndex={-1} type="checkbox" name="packed" value="yes" aria-description="set_outfit_packed/set_item_packed: true marks the row packed; false marks it unpacked." />
+        {detailState === 'loading'  && !selectedPlan ? (
           <p className="closet-empty" role="status">
             Loading checklist...
           </p>
@@ -581,57 +614,20 @@ export function PackingView({ agentEvent, items, isMobileViewport, localAiStatus
           <>
             <div className="closet-packing-detail__header">
               <div>
-                {titleIsEditable ? (
-                  <Field.Root className="closet-packing-title-edit__field">
-                    <Field.Label className="sr-only">Plan title</Field.Label>
-                    <Field.Control
-                      ref={titleInputRef}
-                      name="packing-plan"
-                      className="closet-packing-title-edit__input"
-                      value={form.plan}
-                      placeholder="New packing plan"
-                      onChange={(event) => updateForm('plan', event.target.value)}
-                      onBlur={() => setEditingTitle(false)}
-                      onKeyDown={handleTitleKeyDown}
-                      disabled={detailState === 'saving' || detailState === 'deleting'}
-                      required
-                      aria-required="true"
-                    />
-                  </Field.Root>
-                ) : (
-                  <div className="closet-packing-title-edit">
-                    <h2 title={titleDisplay}>{titleDisplay}</h2>
-                    <Tooltip>
-                      <TooltipTrigger
-                        render={(
-                          <Button
-                            className="closet-packing-title-edit__button"
-                            size="icon"
-                            variant="ghost"
-                            color="neutral"
-                            type="button"
-                            aria-label={`Edit title for ${titleDisplay}`}
-                            disabled={detailState === 'saving' || detailState === 'deleting'}
-                            onClick={() => {
-                              setDetailError('')
-                              setEditingTitle(true)
-                            }}
-                          />
-                        )}
-                      >
-                        <Pencil size={15} strokeWidth={1.4} aria-hidden="true" />
-                      </TooltipTrigger>
-                      <TooltipPortal>
-                        <TooltipPositioner side="top" sideOffset={4}>
-                          <TooltipPopup>
-                            <TooltipArrow />
-                            Edit title
-                          </TooltipPopup>
-                        </TooltipPositioner>
-                      </TooltipPortal>
-                    </Tooltip>
-                  </div>
-                )}
+                <EditableNameTitle
+                  value={form.plan}
+                  fallback={titleDisplay}
+                  label="Plan title"
+                  name="name"
+                  className="closet-packing-title-edit"
+                  editing={editingTitle}
+                  onEditingChange={setEditingTitle}
+                  onKeyDown={handleTitleKeyDown}
+                  disabled={detailState === 'saving' || detailState === 'deleting'}
+                  pendingSubmit={detailState === 'saving' || detailState === 'deleting'}
+                  onChange={(value) => updateForm('plan', value)}
+                  renderTitle={(className, children, title) => <h2 className={className} title={title}>{children}</h2>}
+                />
                 <p>{detailSubtitle}</p>
               </div>
             </div>
@@ -647,12 +643,12 @@ export function PackingView({ agentEvent, items, isMobileViewport, localAiStatus
               />
             ) : null}
 
-            <fieldset className="closet-details__fields" disabled={detailState === 'saving' || detailState === 'deleting'}>
+            <fieldset className="closet-details__fields" inert={detailState === 'saving' || detailState === 'deleting'}>
               <div className="closet-details__row">
                 <label className="closet-field">
                   <span>Start date</span>
                   <Input
-                    name="packing-start-date"
+                    name="startDate"
                     type="date"
                     className="closet-packing-date-input"
                     value={form.startDate}
@@ -662,7 +658,7 @@ export function PackingView({ agentEvent, items, isMobileViewport, localAiStatus
                 <label className="closet-field">
                   <span>End date</span>
                   <Input
-                    name="packing-end-date"
+                    name="endDate"
                     type="date"
                     className="closet-packing-date-input"
                     value={form.endDate}
@@ -674,6 +670,7 @@ export function PackingView({ agentEvent, items, isMobileViewport, localAiStatus
               <div className="closet-field">
                 <span>Status</span>
                 <WardrobeSelect
+                  name="status"
                   value={form.status}
                   onValueChange={(value) => updateForm('status', value === 'packed' ? 'packed' : 'planning')}
                   placeholder="Select status"
@@ -684,7 +681,7 @@ export function PackingView({ agentEvent, items, isMobileViewport, localAiStatus
 
               <label className="closet-field">
                 <span>Notes</span>
-                <textarea name="packing-notes" value={form.notes} onChange={(event) => updateForm('notes', event.target.value)} rows={3} />
+                <textarea name="notes" value={form.notes} onChange={(event) => updateForm('notes', event.target.value)} rows={3} />
               </label>
             </fieldset>
 
@@ -701,7 +698,7 @@ export function PackingView({ agentEvent, items, isMobileViewport, localAiStatus
                     <Button type="button" variant="outline" color="neutral" onClick={() => setConfirmingDelete(false)}>
                       Cancel
                     </Button>
-                    <Button type="button" color="destructive" onClick={() => void deleteSelectedPlan()}>
+                    <Button type="submit" name="intent" value="delete" color="destructive">
                       {detailState === 'deleting' ? 'Deleting...' : 'Delete plan'}
                     </Button>
                   </div>
@@ -710,10 +707,9 @@ export function PackingView({ agentEvent, items, isMobileViewport, localAiStatus
 
               <div className="closet-packing-detail__actions">
                 <button
-                  type="button"
+                  type="submit"
                   className="button button--normal button--primary button--md"
                   disabled={detailState === 'saving' || detailState === 'deleting'}
-                  onClick={() => void savePlan()}
                 >
                   {detailState === 'saving' ? 'Saving...' : isCreating ? 'Create plan' : 'Save changes'}
                 </button>
@@ -801,7 +797,7 @@ export function PackingView({ agentEvent, items, isMobileViewport, localAiStatus
         <div className="closet-packing-status" role="status" aria-live="polite" aria-atomic="true">
           {statusMessage}
         </div>
-      </form>
+      </Form>
 
       <PackingAddOverlay
         mode={addMode}

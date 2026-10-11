@@ -1,18 +1,12 @@
-import { Button } from '@sardrobe/react-components'
-import type { RefObject } from 'react'
+import { Button, Form } from '@sardrobe/react-components'
+import { useState, type RefObject } from 'react'
 import { EditableNameTitle } from '../../components/closet/EditableNameTitle'
 import { ClosetEmptyState, ClosetPanel } from '../../components/closet/ClosetPrimitives'
 import { ClosetStatus } from '../../components/closet/ClosetStatus'
-import { WardrobeMultiSelect, WardrobeSelect, toSelectOptions } from '../../components/closet/FormControls'
+import { WardrobeDetailsFields, readWardrobeForm } from '../../components/closet/FormControls'
 import {
-  arrayToCsv,
-  categories,
-  COLORS,
-  csvToArray,
   formatFileSize,
-  OCCASIONS,
-  SEASONS,
-  SUBCATEGORIES_BY_CATEGORY,
+  type CreateItemResponse,
   type ImportDraft,
   type ImportDraftFilter,
   type ImportMobileView,
@@ -41,7 +35,8 @@ type ImportViewProps = {
   importSummaryLabel: string
   removeDraft: (draftId: string) => void
   retryDraft: (draftId: string) => void
-  saveDraftById: (draftId: string) => void
+  saveDraftById: (draftId: string, options?: { form?: WardrobeFormState }) => Promise<CreateItemResponse['item'] | null>
+  replaceDraftForm: (draftId: string, form: WardrobeFormState) => ImportDraft
   selectedDraft: ImportDraft | null
   selectedDraftCanSubmit: boolean
   selectedDraftHint: string
@@ -74,6 +69,7 @@ export function ImportView(props: ImportViewProps) {
     removeDraft,
     retryDraft,
     saveDraftById,
+    replaceDraftForm,
     selectedDraft,
     selectedDraftCanSubmit,
     selectedDraftHint,
@@ -83,6 +79,19 @@ export function ImportView(props: ImportViewProps) {
     setSelectedDraftId,
     updateDraftForm,
   } = props
+
+  const [formError, setFormError] = useState<{ draftId: string; message: string } | null>(null)
+
+  function reportFormError(message: string) {
+    if (selectedDraft) setFormError({ draftId: selectedDraft.id, message })
+  }
+
+  async function saveSubmittedDraft(data: FormData, fields: ReadonlySet<string>) {
+    if (!selectedDraft || atLimit) throw new Error('No draft selected or the wardrobe is full.')
+    const item = await saveDraftById(selectedDraft.id, { form: readWardrobeForm(data, selectedDraft.form, fields) })
+    if (!item) throw new Error('Could not save this draft. Check its readiness and details.')
+    return { kind: 'imports.draft_submitted', draftId: selectedDraft.id, itemId: item.id, item }
+  }
 
   const limitNote = atLimit ? `Wardrobe full (${itemCount}/${limit}). Remove items to add new ones.` : ''
 
@@ -245,11 +254,25 @@ export function ImportView(props: ImportViewProps) {
         )}
       </ClosetPanel>
 
-      <form
+      <Form
+        tooltitle="Change an import draft"
+        onChange={() => setFormError(null)}
+        key={selectedDraft?.id ?? 'empty'}
+        toolname={selectedDraft ? 'import_draft_mutate' : undefined}
+        actions={['update', 'submit', 'discard']} defaultAction="submit" confirmActions={['submit', 'discard']} skipValidationActions={['discard']}
+        tooldescription={`Change import draft ${selectedDraft?.id ?? ''} in this browser tab. action "submit" (the Save button and default) saves its details and cutout to the wardrobe and requires confirm: true. action "update" edits only the local draft with no confirmation. action "discard" removes the draft from this tab and requires confirm: true. The draft must have a processed cutout before saving, and the wardrobe must have room. Failed saves can be retried with fresh confirmation. Only set fields you are changing; omitted fields keep their current values. Category, subcategory, color, occasion, and season must use the allowed values, and subcategory must belong to the chosen category. Pass [] to clear occasions or seasons and an empty string to clear optional text. Inspect import_draft_image before guessing visual attributes; do not invent values. Returns the edited draft ID and fields. The Save button saves its details and cutout to the wardrobe after the user agrees.`}
+        toolautosubmit=""
         className={`closet-panel closet-details closet-draft-editor ${!selectedDraft ? 'closet-details--disabled' : ''}`}
-        onSubmit={(event) => {
-          event.preventDefault()
-          if (selectedDraft) saveDraftById(selectedDraft.id)
+        onSubmitError={reportFormError}
+        onSubmit={(data, { action, fields }) => {
+          if (!selectedDraft) throw new Error('No draft selected.')
+          if (action === 'discard') {
+            removeDraft(selectedDraft.id)
+            return { kind: 'imports.draft_discarded', draftId: selectedDraft.id }
+          }
+          if (action === 'submit') return saveSubmittedDraft(data, fields)
+          const draft = replaceDraftForm(selectedDraft.id, readWardrobeForm(data, selectedDraft.form, fields))
+          return { kind: 'imports.draft_updated', draftId: draft.id, fields: draft.form }
         }}
       >
         {selectedDraft ? (
@@ -262,6 +285,7 @@ export function ImportView(props: ImportViewProps) {
                   label="Item name"
                   name="name"
                   disabled={selectedDraft.status === 'saving'}
+                  pendingSubmit={selectedDraft.status === 'saving'}
                   onChange={(value) => updateDraftForm(selectedDraft.id, 'name', value)}
                   renderTitle={(className, children, title) => (
                     <h2 className={className} title={title}>
@@ -290,89 +314,31 @@ export function ImportView(props: ImportViewProps) {
               </figure>
             </div>
 
-            {selectedDraft.status === 'failed' ? (
+            {selectedDraft.status === 'failed' && selectedDraft.failureStage !== 'saving' ? (
               <div className="closet-draft-editor__result closet-draft-editor__result--error">
-                <strong>{selectedDraft.failureStage === 'saving' ? 'Save failed.' : 'Processing failed.'}</strong>
+                <strong>Processing failed.</strong>
                 <span>{selectedDraft.error || selectedDraft.message || 'Retry this draft or remove it from the import.'}</span>
                 <div className="closet-draft-editor__actions">
                   <Button color="primary" type="button" onClick={() => retryDraft(selectedDraft.id)}>
-                    {selectedDraft.failureStage === 'saving' ? 'Retry save' : 'Retry'}
+                    Retry
                   </Button>
-                  <Button variant="outline" color="destructive" type="button" onClick={() => removeDraft(selectedDraft.id)}>
+                  <Button variant="outline" color="destructive" type="submit" name="intent" value="discard">
                     Remove draft
                   </Button>
                 </div>
               </div>
             ) : (
               <>
-                <fieldset className="closet-details__fields" disabled={selectedDraft.status === 'saving'}>
-                  <div className="closet-details__row">
-                    <div className="closet-field">
-                      <span>Category</span>
-                      <WardrobeSelect
-                        value={selectedDraft.form.category}
-                        onValueChange={(value) => updateDraftForm(selectedDraft.id, 'category', value)}
-                        placeholder="Select category"
-                        options={toSelectOptions(categories)}
-                        ariaLabel="Category"
-                      />
-                    </div>
-                    <div className="closet-field">
-                      <span>Subcategory</span>
-                      <WardrobeSelect
-                        value={selectedDraft.form.subcategory}
-                        onValueChange={(value) => updateDraftForm(selectedDraft.id, 'subcategory', value)}
-                        placeholder={
-                          (SUBCATEGORIES_BY_CATEGORY[selectedDraft.form.category] ?? []).length === 0
-                            ? 'Pick a category first'
-                            : 'Select subcategory'
-                        }
-                        options={toSelectOptions(SUBCATEGORIES_BY_CATEGORY[selectedDraft.form.category] ?? [])}
-                        ariaLabel="Subcategory"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="closet-field">
-                    <span>Color</span>
-                    <WardrobeSelect
-                      value={selectedDraft.form.color}
-                      onValueChange={(value) => updateDraftForm(selectedDraft.id, 'color', value)}
-                      placeholder="Select color"
-                      options={toSelectOptions(COLORS)}
-                      ariaLabel="Color"
-                    />
-                  </div>
-
-                  <div className="closet-details__row">
-                    <div className="closet-field">
-                      <span>Season</span>
-                      <WardrobeMultiSelect
-                        value={csvToArray(selectedDraft.form.season)}
-                        onValueChange={(values) => updateDraftForm(selectedDraft.id, 'season', arrayToCsv(values))}
-                        placeholder="Select seasons"
-                        options={SEASONS}
-                        ariaLabel="Season"
-                      />
-                    </div>
-                    <div className="closet-field">
-                      <span>Occasion</span>
-                      <WardrobeMultiSelect
-                        value={csvToArray(selectedDraft.form.occasion)}
-                        onValueChange={(values) => updateDraftForm(selectedDraft.id, 'occasion', arrayToCsv(values))}
-                        placeholder="Select occasions"
-                        options={OCCASIONS}
-                        ariaLabel="Occasion"
-                      />
-                    </div>
-                  </div>
-
-                  <label className="closet-field">
-                    <span>Notes</span>
-                    <textarea name="notes" value={selectedDraft.form.notes} onChange={(event) => updateDraftForm(selectedDraft.id, 'notes', event.target.value)} rows={3} />
-                  </label>
+                <fieldset className="closet-details__fields" inert={selectedDraft.status === 'saving'}>
+                  <WardrobeDetailsFields
+                    form={selectedDraft.form}
+                    onChange={(key, value) => updateDraftForm(selectedDraft.id, key, value)}
+                  />
                 </fieldset>
 
+                {formError?.draftId === selectedDraft.id ? (
+                  <p className="closet-builder__validation" role="alert">{formError.message}</p>
+                ) : null}
                 {limitNote || selectedDraftHint ? (
                   <p id="save-draft-hint" className="closet-details__hint">
                     {limitNote || selectedDraftHint}
@@ -382,7 +348,7 @@ export function ImportView(props: ImportViewProps) {
                   <Button color="primary" type="submit" disabled={!selectedDraftCanSubmit || selectedDraft.status === 'saving' || atLimit} aria-describedby={limitNote || selectedDraftHint ? 'save-draft-hint' : undefined}>
                     {selectedDraftSubmitLabel}
                   </Button>
-                  <Button variant="outline" color="destructive" type="button" onClick={() => removeDraft(selectedDraft.id)} disabled={selectedDraft.status === 'saving'}>
+                  <Button variant="outline" color="destructive" type="submit" name="intent" value="discard" disabled={selectedDraft.status === 'saving'}>
                     Remove draft
                   </Button>
                 </div>
@@ -395,7 +361,7 @@ export function ImportView(props: ImportViewProps) {
             <p>Select a photo to edit details before saving.</p>
           </div>
         )}
-      </form>
+      </Form>
     </section>
   )
 }

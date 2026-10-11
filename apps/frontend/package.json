@@ -36,18 +36,21 @@
     "medium-zoom": "1.1.0",
     "react": "catalog:",
     "react-dom": "catalog:",
+    "webmcp-polyfill": "github:webmachinelearning/webmcp-polyfill#fba7a2539fab11e0d3b084f8148dd4fac11a8319",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@astrojs/check": "catalog:",
     "@astrojs/react": "catalog:",
+    "@playwright/test": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "esbuild": "catalog:",
     "typescript": "catalog:",
     "vite-plugin-static-copy": "^4.1.1",
     "vitest": "catalog:",
-    "webmcp-types": "0.1.5",
+    "webmcp-types": "0.1.10",
     "wrangler": "4.127.0"
   }
 }

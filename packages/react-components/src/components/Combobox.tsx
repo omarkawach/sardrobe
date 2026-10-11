@@ -1,5 +1,23 @@
 import * as React from 'react'
+import { FormSelect, formChangeDetails, type NativeSelectProps } from './Form'
 import { Combobox as BaseCombobox } from '@base-ui/react/combobox'
+
+function Root<Value, Multiple extends boolean | undefined = false>({ formOptions, formLabel, name, ...props }: BaseCombobox.Root.Props<Value, Multiple> & NativeSelectProps) {
+  const nativeOptions = formOptions ?? (Array.isArray(props.items) && props.items.every((item) => typeof item === 'string') ? props.items.map((value) => ({ value: String(value), label: String(value) })) : undefined)
+  const native = Boolean(name && nativeOptions)
+  const [formValue, setFormValue] = React.useState(props.defaultValue ?? (props.multiple ? [] : null))
+  const value = props.value === undefined ? formValue : props.value
+  const change = (next: typeof props.value, details: BaseCombobox.Root.ChangeEventDetails) => {
+    props.onValueChange?.(next as Parameters<NonNullable<typeof props.onValueChange>>[0], details)
+    if (!details.isCanceled) setFormValue(next as typeof formValue)
+  }
+  return <>
+    {native ? <FormSelect name={name} form={props.form} options={nativeOptions!} label={formLabel}
+      value={(value ?? (props.multiple ? [] : '')) as string | string[]} multiple={props.multiple} disabled={props.disabled} required={props.required}
+      onChange={(event) => change((props.multiple ? Array.from(event.currentTarget.selectedOptions, (option) => option.value) : event.currentTarget.value) as typeof props.value, formChangeDetails(event.nativeEvent))} /> : null}
+    <BaseCombobox.Root {...props} name={native ? '' : name} value={native ? value as typeof props.value : props.value} onValueChange={native ? change : props.onValueChange} />
+  </>
+}
 
 function Input({ className = '', ref, ...props }: Omit<React.ComponentPropsWithRef<typeof BaseCombobox.Input>, 'className'> & { className?: string } & { ref?: React.Ref<HTMLInputElement> }) {
   const classes = ['combobox__input', className].filter(Boolean).join(' ')
@@ -54,7 +72,7 @@ function GroupLabel({ className = '', ref, ...props }: Omit<React.ComponentProps
 }
 
 export const Combobox = {
-  Root: BaseCombobox.Root,
+  Root,
   Input,
   Trigger,
   Clear,
