@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { FormSelect, formChangeDetails, type NativeSelectProps } from './Form'
 import { Select as BaseSelect } from '@base-ui/react/select'
 
 type SelectLabelsContextType = {
@@ -9,7 +10,7 @@ type SelectLabelsContextType = {
 
 const SelectLabelsContext = React.createContext<SelectLabelsContextType | null>(null)
 
-export interface SelectProps extends React.ComponentPropsWithRef<typeof BaseSelect.Root> {
+export interface SelectProps extends React.ComponentPropsWithRef<typeof BaseSelect.Root>, NativeSelectProps {
     items?: Array<{ label: React.ReactNode; value: unknown }>
 }
 
@@ -43,7 +44,15 @@ export interface SelectOptionGroupProps extends Omit<BaseSelect.Group.Props, 'cl
   label?: string
 }
 
-export function Select({ items, ...props }: SelectProps) {
+export function Select({ items, formOptions, formLabel, name, ...props }: SelectProps) {
+  const nativeOptions = formOptions ?? (items?.every((item) => typeof item.value === 'string') ? items as { value: string; label: React.ReactNode }[] : undefined)
+  const native = Boolean(name && nativeOptions)
+  const [formValue, setFormValue] = React.useState<unknown>(props.defaultValue ?? (props.multiple ? [] : null))
+  const value = props.value === undefined ? formValue : props.value
+  const change = (next: unknown, details: BaseSelect.Root.ChangeEventDetails) => {
+    props.onValueChange?.(next, details)
+    if (!details.isCanceled) setFormValue(next)
+  }
   const [labels, setLabels] = React.useState<Map<unknown, React.ReactNode>>(() => new Map())
 
   // Build a stable map from the items prop for immediate label resolution
@@ -97,7 +106,10 @@ export function Select({ items, ...props }: SelectProps) {
 
   return (
     <SelectLabelsContext.Provider value={contextValue}>
-      <BaseSelect.Root {...props} />
+      {native ? <FormSelect name={name} form={props.form} options={nativeOptions!} label={formLabel}
+        value={(value ?? (props.multiple ? [] : '')) as string | string[]} multiple={props.multiple} disabled={props.disabled} required={props.required}
+        onChange={(event) => change(props.multiple ? Array.from(event.currentTarget.selectedOptions, (option) => option.value) : event.currentTarget.value, formChangeDetails(event.nativeEvent))} /> : null}
+      <BaseSelect.Root {...props} name={native ? '' : name} value={native ? value : props.value} onValueChange={native ? change : props.onValueChange} />
     </SelectLabelsContext.Provider>
   )
 }

@@ -3,6 +3,8 @@ packages:
   - 'packages/*'
 
 allowBuilds:
+  # PR #9 needs prepack to build its published dist; authorize only this commit.
+  webmcp-polyfill@https://codeload.github.com/webmachinelearning/webmcp-polyfill/tar.gz/fba7a2539fab11e0d3b084f8148dd4fac11a8319: true
   '@sentry/cli': set this to true or false
   esbuild: set this to true or false
   onnxruntime-node: set this to true or false

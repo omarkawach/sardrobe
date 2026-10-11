@@ -1,3 +1,5 @@
+import { installWebMCP } from 'webmcp-polyfill'
+
 export const sardrobeOverview = {
   kind: 'sardrobe.site_overview',
   site: {
@@ -49,6 +51,7 @@ export const sardrobeOverviewTool: WebMCP.ModelContextTool = {
 }
 
 export function registerSardrobeOverviewTool() {
+  installWebMCP()
   const modelContext = document.modelContext
   if (!modelContext?.registerTool) return undefined
 

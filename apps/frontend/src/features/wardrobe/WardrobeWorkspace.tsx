@@ -59,52 +59,38 @@ export function WardrobeWorkspace({ user }: WardrobeWorkspaceProps) {
     return agentEventSequenceRef.current
   }
 
-  function revealAgentItemUpdate(item: WardrobeItem) {
-    itemDetail.showAgentItemUpdate(item)
-    setActiveSection('wardrobe')
+  // Tools choose their view and dismiss the item overlay without requiring UI clicks.
+  function revealSection(section: ClosetSection) {
+    itemDetail.closeItemDialog()
+    setActiveSection(section)
     setMobileFiltersOpen(false)
   }
 
-  function removeAgentDeletedItem(itemId: string) {
-    itemDetail.removeAgentDeletedItem(itemId)
-    setActiveSection('wardrobe')
-    setMobileFiltersOpen(false)
+  function revealAgentItemEditor(item: WardrobeItem) {
+    revealSection('wardrobe')
+    itemDetail.showItemEditor(item)
   }
 
   function revealAgentImportDraft(draftId: string) {
     imports.revealAgentDraftUpdate(draftId)
-    setActiveSection('import')
-    setMobileFiltersOpen(false)
-  }
-
-  function revealAgentImportDraftList() {
-    imports.revealAgentDraftList()
-    setActiveSection('import')
-    setMobileFiltersOpen(false)
+    revealSection('import')
   }
 
   function revealAgentOutfitUpdate(outfit: Outfit, mode: 'created' | 'updated') {
     setOutfitAgentEvent({ sequence: nextAgentEventSequence(), type: mode, outfit })
-    setActiveSection('outfits')
-    setMobileFiltersOpen(false)
+    revealSection('outfits')
   }
 
   function revealAgentOutfitDelete(outfitId: string) {
     setOutfitAgentEvent({ sequence: nextAgentEventSequence(), type: 'deleted', outfitId })
-    setActiveSection('outfits')
-    setMobileFiltersOpen(false)
+    revealSection('outfits')
   }
 
-  function revealAgentPackingPlanUpdate(plan: PackingPlan, mode: 'created' | 'updated') {
-    setPackingAgentEvent({ sequence: nextAgentEventSequence(), type: mode, plan })
-    setActiveSection('packing')
-    setMobileFiltersOpen(false)
-  }
-
-  function revealAgentPackingPlanDelete(planId: string) {
-    setPackingAgentEvent({ sequence: nextAgentEventSequence(), type: 'deleted', planId })
-    setActiveSection('packing')
-    setMobileFiltersOpen(false)
+  function revealAgentPackingEditor(plan: PackingPlan | null) {
+    setPackingAgentEvent(plan
+      ? { sequence: nextAgentEventSequence(), type: 'edit', plan }
+      : { sequence: nextAgentEventSequence(), type: 'create' })
+    revealSection('packing')
   }
 
   function clearOutfitAgentEvent(sequence: number) {
@@ -116,19 +102,12 @@ export function WardrobeWorkspace({ user }: WardrobeWorkspaceProps) {
   }
 
   useSardrobeWebMcpTools({
-    applyItemUpdate: revealAgentItemUpdate,
+    revealItemEditor: revealAgentItemEditor,
+    revealPackingEditor: revealAgentPackingEditor,
     drafts: imports.drafts,
     revealImportDraft: revealAgentImportDraft,
-    revealImportDraftList: revealAgentImportDraftList,
     revealOutfitDelete: revealAgentOutfitDelete,
     revealOutfitUpdate: revealAgentOutfitUpdate,
-    revealPackingPlanDelete: revealAgentPackingPlanDelete,
-    revealPackingPlanUpdate: revealAgentPackingPlanUpdate,
-    refreshItems,
-    removeDraft: imports.removeDraft,
-    removeItem: removeAgentDeletedItem,
-    saveDraftById: imports.saveDraftById,
-    updateDraftForm: imports.updateDraftForm,
     user,
   })
 
@@ -352,12 +331,12 @@ export function WardrobeWorkspace({ user }: WardrobeWorkspaceProps) {
       <ItemDetailOverlay
         closeItemDialog={itemDetail.closeItemDialog}
         confirmingDelete={itemDetail.confirmingDelete}
-        deleteSelectedItem={() => void itemDetail.deleteSelectedItem()}
+        deleteSelectedItem={itemDetail.deleteSelectedItem}
         detailMessage={itemDetail.detailMessage}
         detailState={itemDetail.detailState}
         editForm={itemDetail.editForm}
         isMobileViewport={isMobileViewport}
-        saveSelectedItem={() => void itemDetail.saveSelectedItem()}
+        saveSelectedItem={itemDetail.saveSelectedItem}
         selectedCreatedDate={itemDetail.selectedCreatedDate}
         selectedItem={itemDetail.selectedItem}
         selectedUpdatedDate={itemDetail.selectedUpdatedDate}

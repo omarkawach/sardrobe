@@ -1,60 +1,34 @@
 import { useEffect, useRef } from 'react'
-import { deleteWardrobeItem, fetchWardrobeItem, fetchWardrobeItems, updateWardrobeItem } from '../wardrobe/api'
+import { installWebMCP } from 'webmcp-polyfill'
+import { fetchWardrobeItem, fetchWardrobeItems } from '../wardrobe/api'
 import {
-  COLORS,
   OCCASIONS,
   SEASONS,
-  SUBCATEGORIES_BY_CATEGORY,
   arrayToCsv,
-  categories,
   csvToArray,
-  type CreateItemResponse,
   type ImportDraft,
   type ImportDraftStatus,
-  type WardrobeFormState,
   type WardrobeItem,
+  type WardrobeFormState,
 } from '../wardrobe/domain'
 import { draftImageUrl } from '../wardrobe/import-processing'
 import { createOutfit, deleteOutfit, listOutfits, updateOutfit } from '../outfits/api'
 import { clampUnit, legacyPositionFor, wardrobeCategoryToRole, type CreateOutfitItemPayload, type CreateOutfitPayload, type Outfit, type OutfitItem, type OutfitRole } from '../outfits/domain'
-import {
-  addPackingItems,
-  addPackingOutfits,
-  createPackingPlan,
-  deletePackingPlan,
-  fetchPackingPlan,
-  listPackingPlans,
-  reconcilePackedStatus,
-  removePackingItem,
-  removePackingOutfit,
-  togglePackingItem,
-  togglePackingOutfit,
-  updatePackingPlan,
-} from '../packing/api'
-import type { PackingPlan, PackingPlanFormState, PackingPlanStatus } from '../packing/domain'
+import { fetchPackingPlan, listPackingPlans } from '../packing/api'
+import type { PackingPlan } from '../packing/domain'
 import type { WorkspaceUser } from '../wardrobe/WorkspaceNavigation'
 
-type ItemUpdateFields = Partial<Pick<WardrobeFormState, 'name' | 'category' | 'subcategory' | 'color' | 'description' | 'occasion' | 'season' | 'notes'>>
-
 type UseSardrobeWebMcpToolsOptions = {
-  applyItemUpdate: (item: WardrobeItem) => void
   drafts: ImportDraft[]
+  revealItemEditor: (item: WardrobeItem) => void
+  revealPackingEditor: (plan: PackingPlan | null) => void
   revealImportDraft: (draftId: string) => void
-  revealImportDraftList: () => void
   revealOutfitDelete: (outfitId: string) => void
   revealOutfitUpdate: (outfit: Outfit, mode: 'created' | 'updated') => void
-  revealPackingPlanDelete: (planId: string) => void
-  revealPackingPlanUpdate: (plan: PackingPlan, mode: 'created' | 'updated') => void
-  refreshItems: () => Promise<void>
-  removeDraft: (draftId: string) => void
-  removeItem: (itemId: string) => void
-  saveDraftById: (draftId: string, options?: { refresh?: boolean; quiet?: boolean }) => Promise<CreateItemResponse['item'] | null>
-  updateDraftForm: (draftId: string, key: keyof WardrobeFormState, value: string) => void
   user: WorkspaceUser
 }
 
 const outfitRoles: readonly OutfitRole[] = ['top', 'bottom', 'outerwear', 'shoes', 'bag', 'belt', 'accessories']
-const packingStatuses: readonly PackingPlanStatus[] = ['planning', 'packed']
 
 const agentOutfitZIndex: Record<OutfitRole, number> = {
   bag: 0,
@@ -66,8 +40,6 @@ const agentOutfitZIndex: Record<OutfitRole, number> = {
   accessories: 600,
 }
 
-const itemUpdateKeys = ['name', 'category', 'subcategory', 'color', 'description', 'occasion', 'season', 'notes'] as const
-
 // Status filter values for the import_drafts schema, kept in sync with
 // ImportDraftStatus in wardrobe/domain.ts. Typing the entries as
 // ImportDraftStatus makes a removed or renamed status a compile error here;
@@ -77,14 +49,8 @@ const importDraftStatuses: readonly ImportDraftStatus[] = ['queued', 'processing
 const imageFormats = ['image/webp', 'image/jpeg', 'image/png'] as const
 type ImageFormat = (typeof imageFormats)[number]
 
-// Flat list of every controlled subcategory across all categories. Used as the
-// schema enum so an agent cannot invent values (e.g. "collarless jacket"). The
-// per-category cross-check in parseItemUpdateArgs still rejects valid-but-
-// mismatched pairs (e.g. Tops + Jacket); both derive from SUBCATEGORIES_BY_CATEGORY.
-const allSubcategories: readonly string[] = Array.from(new Set(Object.values(SUBCATEGORIES_BY_CATEGORY).flat()))
-
-// Registers Sardrobe directly against the WebMCP API implemented by compatible
-// browsers. Unsupported browsers simply do not expose document.modelContext.
+// Registers Sardrobe against native WebMCP when available, installing the
+// polyfill first in secure browsers that do not expose document.modelContext.
 //
 // Rules of Hooks: each tool is its own useWebMcpTool call in a fixed order. Handlers
 // read live app state through optionsRef so the closures never go stale, while
@@ -100,7 +66,7 @@ export function useSardrobeWebMcpTools(options: UseSardrobeWebMcpToolsOptions) {
     name: 'wardrobe_items',
     title: 'Read wardrobe items',
     description:
-      'Read closet items. action "list" returns all items the signed-in user owns (with optional search and a metadata-gap filter); action "get" returns one item by id. Output carries metadata provenance, derived roles, media references, and metadata gaps. To see an item visually, call wardrobe_item_image.',
+      'Read closet items. action "list" returns all items the signed-in user owns (with optional search and a metadata-gap filter); action "get" returns one item by id. Output carries metadata provenance, derived roles, media references, and metadata gaps. Getting an item also opens its details; discover wardrobe_item_mutate to change it through the form. To see an item visually, call wardrobe_item_image.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -119,6 +85,7 @@ export function useSardrobeWebMcpTools(options: UseSardrobeWebMcpToolsOptions) {
 
       if (action === 'get') {
         const item = await fetchWardrobeItem(requiredString(args.itemId, 'itemId'))
+        get().revealItemEditor(item)
         return { kind: 'wardrobe.item_detail', item: serializeAgentWardrobeItem(item) }
       }
 
@@ -143,57 +110,6 @@ export function useSardrobeWebMcpTools(options: UseSardrobeWebMcpToolsOptions) {
   // inspect authenticated or browser-local images without public image URLs.
   useImageTools(get)
 
-  useWebMcpTool({
-    name: 'wardrobe_item_mutate',
-    title: 'Change a wardrobe item',
-    description:
-      'Change one wardrobe item. action "update" saves title and metadata directly (no confirmation); action "delete" permanently removes the item and its cutout and requires confirm: true. For update, only set fields you are changing; fields.title is an alias for fields.name. Category, subcategory, color, occasion, and season must use the allowed values, and subcategory must belong to the chosen category. Inspect wardrobe_item_image before guessing visual attributes; do not invent values. Returns the updated item.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        action: { type: 'string', enum: ['update', 'delete'], description: 'update = save metadata; delete = remove permanently.' },
-        itemId: { type: 'string', description: 'Wardrobe item ID.' },
-        fields: itemUpdateFieldsSchema(),
-        confirm: { type: 'boolean', description: 'Required true for action "delete".' },
-      },
-      required: ['action', 'itemId'],
-      additionalProperties: false,
-    } as const,
-    annotations: { readOnlyHint: false, untrustedContentHint: true },
-    handler: async (args) => {
-      const action = readAction(args, ['update', 'delete'] as const)
-      const itemId = requiredString(args.itemId, 'itemId')
-
-      if (action === 'delete') {
-        if (args.confirm !== true) throw new ToolCallError('Set confirm: true to permanently delete this item.', 'confirmation_required')
-        await deleteWardrobeItem(itemId)
-        get().removeItem(itemId)
-        return { kind: 'wardrobe.item_deleted', itemId }
-      }
-
-      const current = await fetchWardrobeItem(itemId)
-      // Validate subcategory against the saved category when the update does not
-      // change it, so a subcategory-only edit is still checked against the right list.
-      const fields = parseItemFields(args.fields, current.category)
-
-      const form: WardrobeFormState = {
-        name: current.name,
-        category: current.category,
-        subcategory: current.subcategory ?? '',
-        color: current.color ?? '',
-        description: current.description ?? '',
-        occasion: current.occasion ?? '',
-        season: current.season ?? '',
-        status: current.status,
-        notes: current.notes ?? '',
-        ...fields,
-      }
-
-      const item = await updateWardrobeItem(itemId, form)
-      get().applyItemUpdate(item)
-      return { kind: 'wardrobe.item_updated', item: serializeAgentWardrobeItem(item) }
-    },
-  })
 
   // --- Import drafts (browser-local) ---
 
@@ -201,7 +117,7 @@ export function useSardrobeWebMcpTools(options: UseSardrobeWebMcpToolsOptions) {
     name: 'import_drafts',
     title: 'Read import drafts',
     description:
-      'Read browser-local import drafts (in-progress uploads for the current tab session). action "list" returns all drafts (optionally filtered by status); action "get" returns one draft by id with image references, processing errors, editable metadata, save readiness, and metadata gaps. To see a draft visually, call import_draft_image (the draft image URLs are browser-local and not viewable as plain references).',
+      'Read browser-local import drafts (in-progress uploads for the current tab session). action "list" returns all drafts (optionally filtered by status); action "get" returns one draft by id with image references, processing errors, editable metadata, save readiness, and metadata gaps. Getting a draft also opens its form; discover import_draft_mutate to edit, save, or discard it. To see a draft visually, call import_draft_image (the draft image URLs are browser-local and not viewable as plain references).',
     inputSchema: {
       type: 'object',
       properties: {
@@ -220,6 +136,7 @@ export function useSardrobeWebMcpTools(options: UseSardrobeWebMcpToolsOptions) {
         const draftId = requiredString(args.draftId, 'draftId')
         const draft = get().drafts.find((candidate) => candidate.id === draftId)
         if (!draft) throw new ToolCallError('Import draft not found in this browser session.', 'not_found')
+        get().revealImportDraft(draftId)
         return { kind: 'imports.draft_detail', draft: serializeAgentImportDraft(draft) }
       }
 
@@ -231,60 +148,6 @@ export function useSardrobeWebMcpTools(options: UseSardrobeWebMcpToolsOptions) {
     },
   })
 
-  useWebMcpTool({
-    name: 'import_draft_mutate',
-    title: 'Change an import draft',
-    description:
-      'Change a browser-local import draft. action "update" edits its title and metadata fields in place (no confirmation). action "submit" saves a ready draft as a wardrobe item and requires confirm: true. action "discard" removes the draft and requires confirm: true. For update, fields.title is an alias for fields.name; controlled vocabulary matches wardrobe_item_mutate.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        action: { type: 'string', enum: ['update', 'submit', 'discard'], description: 'update = edit fields; submit = save as wardrobe item; discard = remove draft.' },
-        draftId: { type: 'string', description: 'Import draft ID.' },
-        fields: itemUpdateFieldsSchema(),
-        confirm: { type: 'boolean', description: 'Required true for "submit" and "discard".' },
-      },
-      required: ['action', 'draftId'],
-      additionalProperties: false,
-    } as const,
-    annotations: { readOnlyHint: false, untrustedContentHint: true },
-    handler: async (args) => {
-      const action = readAction(args, ['update', 'submit', 'discard'] as const)
-      const draftId = requiredString(args.draftId, 'draftId')
-      const draft = get().drafts.find((candidate) => candidate.id === draftId)
-      if (!draft) throw new ToolCallError('Import draft not found in this browser session.', 'not_found')
-
-      if (action === 'discard') {
-        if (args.confirm !== true) throw new ToolCallError('Set confirm: true to discard this draft.', 'confirmation_required')
-        get().removeDraft(draftId)
-        get().revealImportDraftList()
-        return { kind: 'imports.draft_discarded', draftId }
-      }
-
-      if (action === 'submit') {
-        if (args.confirm !== true) throw new ToolCallError('Set confirm: true to save this draft as a wardrobe item.', 'confirmation_required')
-        if (draft.status !== 'ready') throw new ToolCallError(`Draft is not ready to save (status: ${draft.status}).`, 'invalid_state')
-        const savedItem = await get().saveDraftById(draftId, { refresh: false })
-        if (!savedItem) throw new ToolCallError('Could not save this draft. Check its readiness and required fields.', 'request_failed')
-        try {
-          get().applyItemUpdate(await fetchWardrobeItem(savedItem.id))
-        } catch {
-          await get().refreshItems()
-        }
-        // Return the created wardrobe item id (and a light summary) so the agent
-        // does not have to search the closet to find what it just saved.
-        return { kind: 'imports.draft_submitted', draftId, itemId: savedItem.id, item: savedItem }
-      }
-
-      // update: validate against the draft's current category and apply per field.
-      const fields = parseItemFields(args.fields, draft.form.category)
-      for (const key of itemUpdateKeys) {
-        if (fields[key] !== undefined) get().updateDraftForm(draftId, key, fields[key])
-      }
-      get().revealImportDraft(draftId)
-      return { kind: 'imports.draft_updated', draftId, fields }
-    },
-  })
 
   // --- Outfits ---
 
@@ -397,11 +260,11 @@ export function useSardrobeWebMcpTools(options: UseSardrobeWebMcpToolsOptions) {
   useWebMcpTool({
     name: 'packing_plans',
     title: 'Read packing plans',
-    description: 'Read packing plans. action "list" returns plan summaries with checklist counts, dates, status, and notes; action "get" returns one plan by id with outfit rows, wardrobe item rows, packed state, and same-origin media URLs.',
+    description: 'Read packing plans. action "list" returns plan summaries with checklist counts, dates, status, and notes; action "get" returns one plan by id with outfit rows, wardrobe item rows, packed state, and same-origin media URLs. Getting a plan opens its form. action "new" opens an unsaved form without creating a record. Discover packing_plan_mutate to save metadata or change its checklist.',
     inputSchema: {
       type: 'object',
       properties: {
-        action: { type: 'string', enum: ['list', 'get'], description: 'list = all plans; get = one plan by id.' },
+        action: { type: 'string', enum: ['list', 'get', 'new'], description: 'list = all plans; get = one plan by id and open its form; new = open an unsaved packing plan form.' },
         planId: { type: 'string', description: 'Required for action "get".' },
       },
       required: ['action'],
@@ -409,11 +272,17 @@ export function useSardrobeWebMcpTools(options: UseSardrobeWebMcpToolsOptions) {
     } as const,
     annotations: { readOnlyHint: true, untrustedContentHint: true },
     handler: async (args) => {
-      const action = readAction(args, ['list', 'get'] as const)
+      const action = readAction(args, ['list', 'get', 'new'] as const)
+
+      if (action === 'new') {
+        get().revealPackingEditor(null)
+        return { kind: 'packing.new_plan', tool: 'packing_plan_mutate' }
+      }
 
       if (action === 'get') {
         const plan = await fetchPackingPlan(requiredString(args.planId, 'planId'))
         if ('error' in plan) throw new ToolCallError(plan.error, 'request_failed')
+        get().revealPackingEditor(plan)
         return {
           kind: 'packing.plan_detail',
           plan: {
@@ -430,82 +299,6 @@ export function useSardrobeWebMcpTools(options: UseSardrobeWebMcpToolsOptions) {
     },
   })
 
-  useWebMcpTool({
-    name: 'packing_plan_mutate',
-    title: 'Change a packing plan',
-    description:
-      'Create, update, change membership, or pack a packing plan. Actions: "create" (new plan, may seed outfitIds/itemIds), "update" (metadata: name, dates, status, notes), "delete" (confirm: true), "add_outfits"/"add_items" (add by outfit/item id), "remove_outfit"/"remove_item" (by rowId, from packing_plans get), "set_outfit_packed"/"set_item_packed" (toggle a row\'s packed state by rowId). Packed state auto-reconciles plan status: when every row is packed the plan becomes "packed", otherwise "planning" — so prefer set_*_packed over setting status by hand. Dates are ISO yyyy-mm-dd; end date cannot precede start date. Returns the updated plan.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        action: {
-          type: 'string',
-          enum: ['create', 'update', 'delete', 'add_outfits', 'add_items', 'remove_outfit', 'remove_item', 'set_outfit_packed', 'set_item_packed'],
-          description: 'The mutation to perform.',
-        },
-        planId: { type: 'string', description: 'Required for every action except create.' },
-        name: { type: 'string', description: 'Plan name (required for create).' },
-        startDate: { type: 'string', description: 'create/update: optional ISO yyyy-mm-dd start date.' },
-        endDate: { type: 'string', description: 'create/update: optional ISO yyyy-mm-dd end date.' },
-        status: { type: 'string', enum: packingStatuses, description: 'create/update: plan status. Usually let set_*_packed manage this.' },
-        notes: { type: 'string', description: 'create/update: notes.' },
-        outfitIds: { type: 'array', items: { type: 'string' }, description: 'create (seed) or add_outfits: outfit ids to include.' },
-        itemIds: { type: 'array', items: { type: 'string' }, description: 'create (seed) or add_items: wardrobe item ids to include.' },
-        rowId: { type: 'string', description: 'Membership-row id (from packing_plans get) for remove_* and set_*_packed.' },
-        packed: { type: 'boolean', description: 'Target packed state for set_outfit_packed / set_item_packed.' },
-        confirm: { type: 'boolean', description: 'Required true for delete.' },
-      },
-      required: ['action'],
-      additionalProperties: false,
-    } as const,
-    annotations: { readOnlyHint: false, untrustedContentHint: true },
-    handler: async (args) => {
-      const action = readAction(
-        args,
-        ['create', 'update', 'delete', 'add_outfits', 'add_items', 'remove_outfit', 'remove_item', 'set_outfit_packed', 'set_item_packed'] as const,
-      )
-
-      if (action === 'create') {
-        const form = buildPackingForm(args, true)
-        const rows = { outfitIds: optionalStringArray(args.outfitIds, 'outfitIds'), itemIds: optionalStringArray(args.itemIds, 'itemIds') }
-        const created = await createPackingPlan(form, rows)
-        if ('error' in created) throw new ToolCallError(created.error, 'request_failed')
-        get().revealPackingPlanUpdate(created, 'created')
-        return { kind: 'packing.created', plan: created }
-      }
-
-      const planId = requiredString(args.planId, 'planId')
-
-      switch (action) {
-        case 'delete': {
-          if (args.confirm !== true) throw new ToolCallError('Set confirm: true to delete this packing plan.', 'confirmation_required')
-          const result = await deletePackingPlan(planId)
-          if ('error' in result) throw new ToolCallError(result.error, 'request_failed')
-          get().revealPackingPlanDelete(planId)
-          return { kind: 'packing.deleted', planId }
-        }
-        case 'update': {
-          const form = buildPackingForm(args, false)
-          const updated = await updatePackingPlan(planId, form)
-          if ('error' in updated) throw new ToolCallError(updated.error, 'request_failed')
-          get().revealPackingPlanUpdate(updated, 'updated')
-          return { kind: 'packing.updated', plan: updated }
-        }
-        case 'add_outfits':
-          return packingResult('packing.outfits_added', await reconcilePlanResult(await addPackingOutfits(planId, requireStringArray(args.outfitIds, 'outfitIds'))), (plan) => get().revealPackingPlanUpdate(plan, 'updated'))
-        case 'add_items':
-          return packingResult('packing.items_added', await reconcilePlanResult(await addPackingItems(planId, requireStringArray(args.itemIds, 'itemIds'))), (plan) => get().revealPackingPlanUpdate(plan, 'updated'))
-        case 'remove_outfit':
-          return packingResult('packing.outfit_removed', await reconcilePlanResult(await removePackingOutfit(planId, requiredString(args.rowId, 'rowId'))), (plan) => get().revealPackingPlanUpdate(plan, 'updated'))
-        case 'remove_item':
-          return packingResult('packing.item_removed', await reconcilePlanResult(await removePackingItem(planId, requiredString(args.rowId, 'rowId'))), (plan) => get().revealPackingPlanUpdate(plan, 'updated'))
-        case 'set_outfit_packed':
-          return packingResult('packing.outfit_packed', await reconcilePlanResult(await togglePackingOutfit(planId, requiredString(args.rowId, 'rowId'), readBoolean(args.packed, 'packed'))), (plan) => get().revealPackingPlanUpdate(plan, 'updated'))
-        case 'set_item_packed':
-          return packingResult('packing.item_packed', await reconcilePlanResult(await togglePackingItem(planId, requiredString(args.rowId, 'rowId'), readBoolean(args.packed, 'packed'))), (plan) => get().revealPackingPlanUpdate(plan, 'updated'))
-      }
-    },
-  })
 }
 
 type SardrobeWebMcpTool = Omit<WebMCP.ModelContextTool, 'execute'> & {
@@ -520,6 +313,7 @@ function useWebMcpTool({ handler, ...definition }: SardrobeWebMcpTool) {
   const definitionRef = useRef(definition)
 
   useEffect(() => {
+    installWebMCP()
     const modelContext = document.modelContext
     if (!modelContext) return undefined
 
@@ -535,21 +329,6 @@ function useWebMcpTool({ handler, ...definition }: SardrobeWebMcpTool) {
 
     return () => controller.abort()
   }, [])
-}
-
-// Membership and packed-state changes return the updated plan; reconcile its
-// status against the rows (all packed -> packed, otherwise planning) so the
-// WebMCP path matches the UI's auto-status behavior. Adding an unpacked row to a
-// fully-packed plan correctly flips it back to planning.
-async function reconcilePlanResult(result: PackingPlan | { error: string }): Promise<PackingPlan | { error: string }> {
-  if ('error' in result) return result
-  return reconcilePackedStatus(result)
-}
-
-function packingResult(kind: string, result: PackingPlan | { error: string }, reveal?: (plan: PackingPlan) => void) {
-  if ('error' in result) throw new ToolCallError(result.error, 'request_failed')
-  reveal?.(result)
-  return { kind, plan: result }
 }
 
 const imageToolInputSchema = {
@@ -595,6 +374,7 @@ function useImageTools(get: () => UseSardrobeWebMcpToolsOptions) {
   useEffect(() => {
     if (typeof document === 'undefined') return undefined
 
+    installWebMCP()
     const modelContext = document.modelContext
     if (!modelContext?.registerTool) return undefined
 
@@ -1044,24 +824,6 @@ function searchableItemText(item: WardrobeItem) {
     .toLowerCase()
 }
 
-function itemUpdateFieldsSchema() {
-  return {
-    type: 'object',
-    properties: {
-      title: { type: 'string', description: 'Visible item title. Alias for name; submit only one of title or name unless they match.' },
-      name: { type: 'string', description: 'Visible item title. Alias for title; submit only one of name or title unless they match.' },
-      category: { type: 'string', enum: categories },
-      subcategory: { type: 'string', enum: allSubcategories, description: 'Must belong to the chosen category (a mismatched pair is rejected with the allowed list for that category).' },
-      color: { type: 'string', enum: COLORS },
-      description: { type: 'string' },
-      occasion: { type: 'array', items: { type: 'string', enum: OCCASIONS }, description: 'Zero or more occasions from the allowed list. Replaces the full set; pass [] to clear.' },
-      season: { type: 'array', items: { type: 'string', enum: SEASONS }, description: 'Zero or more seasons from the allowed list. Replaces the full set; pass [] to clear.' },
-      notes: { type: 'string' },
-    },
-    additionalProperties: false,
-  } as const
-}
-
 // Read and validate the discriminating "action" field of a mutation/read tool.
 // Per-action required fields are enforced in each handler rather than via JSON
 // Schema oneOf, which the polyfill validator does not handle reliably.
@@ -1071,26 +833,6 @@ function readAction<T extends string>(args: Record<string, unknown>, allowed: re
     throw new ToolCallError(`action must be one of: ${allowed.join(', ')}.`, 'invalid_input')
   }
   return action as T
-}
-
-function optionalStringArray(value: unknown, label: string): string[] {
-  if (value === undefined) return []
-  if (!Array.isArray(value)) throw new ToolCallError(`${label} must be an array of ids.`, 'invalid_input')
-  return value.map((entry) => {
-    if (typeof entry !== 'string' || !entry.trim()) throw new ToolCallError(`${label} must contain non-empty id strings.`, 'invalid_input')
-    return entry.trim()
-  })
-}
-
-function requireStringArray(value: unknown, label: string): string[] {
-  const ids = optionalStringArray(value, label)
-  if (ids.length === 0) throw new ToolCallError(`${label} must contain at least one id.`, 'invalid_input')
-  return ids
-}
-
-function readBoolean(value: unknown, label: string): boolean {
-  if (typeof value !== 'boolean') throw new ToolCallError(`${label} must be true or false.`, 'invalid_input')
-  return value
 }
 
 // Build the outfit create/update payload from tool args. The composition is
@@ -1157,26 +899,6 @@ function defaultAgentOutfitZIndex(role: OutfitRole, roleOffset: number, fallback
   return (agentOutfitZIndex[role] ?? fallback * 100) + roleOffset
 }
 
-function buildPackingForm(args: Record<string, unknown>, requireName: boolean): PackingPlanFormState {
-  const name = requireName ? requiredString(args.name, 'name') : optionalString(args.name)
-  const status = args.status === undefined ? 'planning' : readEnum(args.status, 'status', packingStatuses)
-
-  return {
-    plan: name,
-    startDate: optionalString(args.startDate),
-    endDate: optionalString(args.endDate),
-    status,
-    notes: optionalString(args.notes),
-  }
-}
-
-function readEnum<T extends string>(value: unknown, label: string, allowed: readonly T[]): T {
-  if (typeof value !== 'string' || !allowed.includes(value as T)) {
-    throw new ToolCallError(`${label} must be one of: ${allowed.join(', ')}.`, 'invalid_input')
-  }
-  return value as T
-}
-
 function optionalNumber(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null
 }
@@ -1198,91 +920,6 @@ function parseControlledList(value: unknown, label: string, allowed: readonly st
   }
 
   return arrayToCsv([...seen])
-}
-
-// Parse and validate the editable metadata fields shared by wardrobe items and
-// import drafts. currentCategory is the resource's saved category, used to
-// validate a subcategory when the update does not also change the category. Does
-// not read any id field, so it works for both wardrobe items (itemId) and drafts
-// (draftId).
-function parseItemFields(rawFieldsValue: unknown, currentCategory: string): ItemUpdateFields {
-  if (!rawFieldsValue || typeof rawFieldsValue !== 'object' || Array.isArray(rawFieldsValue)) {
-    throw new ToolCallError('fields must be an object.', 'invalid_input')
-  }
-
-  const fields: ItemUpdateFields = {}
-  const rawFields = rawFieldsValue as Record<string, unknown>
-
-  if (Object.hasOwn(rawFields, 'title')) {
-    const title = rawFields.title
-    if (typeof title !== 'string') {
-      throw new ToolCallError('title must be text.', 'invalid_input')
-    }
-
-    if (Object.hasOwn(rawFields, 'name')) {
-      const name = rawFields.name
-      if (typeof name !== 'string') {
-        throw new ToolCallError('name must be text.', 'invalid_input')
-      }
-      if (name !== title) {
-        throw new ToolCallError('Use either fields.title or fields.name, or provide the same value for both.', 'invalid_input')
-      }
-    }
-
-    fields.name = title
-  }
-
-  // occasion and season are multi-select controlled values stored as CSV. The
-  // agent sends them as arrays of enum values; everything else is a string.
-  const stringKeys = itemUpdateKeys.filter((key) => key !== 'occasion' && key !== 'season')
-
-  for (const key of stringKeys) {
-    if (!Object.hasOwn(rawFields, key)) continue
-    const value = rawFields[key]
-    if (typeof value !== 'string') {
-      throw new ToolCallError(`${key} must be text.`, 'invalid_input')
-    }
-    fields[key] = value
-  }
-
-  if (Object.hasOwn(rawFields, 'occasion')) {
-    fields.occasion = parseControlledList(rawFields.occasion, 'occasion', OCCASIONS)
-  }
-  if (Object.hasOwn(rawFields, 'season')) {
-    fields.season = parseControlledList(rawFields.season, 'season', SEASONS)
-  }
-
-  if (Object.keys(fields).length === 0) {
-    throw new ToolCallError('At least one update field is required.', 'invalid_input')
-  }
-
-  if (fields.name !== undefined && !fields.name.trim()) {
-    throw new ToolCallError('name cannot be blank.', 'invalid_input')
-  }
-
-  if (fields.category !== undefined && !categories.includes(fields.category)) {
-    throw new ToolCallError(`category must be one of: ${categories.join(', ')}.`, 'invalid_input')
-  }
-
-  if (fields.color !== undefined && fields.color.trim() && !COLORS.includes(fields.color as (typeof COLORS)[number])) {
-    throw new ToolCallError(`color must be one of: ${COLORS.join(', ')}.`, 'invalid_input')
-  }
-
-  // Cross-check subcategory against the resolved category (the field being set,
-  // or the item's current one). This rejects valid-but-mismatched pairs like
-  // Tops + Jacket that a flat enum alone would allow.
-  if (fields.subcategory !== undefined && fields.subcategory.trim()) {
-    const category = fields.category ?? currentCategory
-    const allowed = SUBCATEGORIES_BY_CATEGORY[category] ?? []
-    if (!allowed.includes(fields.subcategory)) {
-      throw new ToolCallError(
-        `subcategory "${fields.subcategory}" is not valid for category "${category}". Allowed: ${allowed.length ? allowed.join(', ') : '(none for this category)'}.`,
-        'invalid_input',
-      )
-    }
-  }
-
-  return fields
 }
 
 async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
