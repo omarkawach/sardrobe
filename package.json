@@ -4,7 +4,7 @@
   "private": true,
   "description": "Open-source AI digital wardrobe with local image processing, outfit planning, packing lists, WebMCP, and Cloudflare deployment.",
   "license": "MIT",
-  "packageManager": "pnpm@10.33.0",
+  "packageManager": "pnpm@12.11.2+sha512.25a51652a196785af5f28bda6dfe8dc582ebefa4ac1d180221ce1390231c5fb76637822ea4b6e4633ce74acdcb0a77f725af11bad38177fdeddaee818a955cb9",
   "scripts": {
     "dev": "pnpm --parallel --filter @sardrobe/backend --filter @sardrobe/frontend --filter @sardrobe/background-remover dev",
     "build": "pnpm -r --if-present build",
