@@ -18,16 +18,16 @@
   "dependencies": {
     "@sardrobe/data-ops": "workspace:*",
     "@sentry/cloudflare": "catalog:",
-    "better-auth": "^1.7.2",
-    "drizzle-orm": "^0.45.2",
+    "better-auth": "^1.7.27",
+    "drizzle-orm": "^0.45.4",
     "hono": "catalog:",
-    "zod": "^4.4.3"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@cloudflare/vitest-pool-workers": "^0.22.0",
     "@types/node": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:",
-    "wrangler": "4.127.0"
+    "wrangler": "4.166.0",
+    "@cloudflare/vitest-plugin": "^1.9.0"
   }
 }

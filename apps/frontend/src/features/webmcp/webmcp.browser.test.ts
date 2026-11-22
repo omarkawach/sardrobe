@@ -28,7 +28,7 @@ beforeAll(async () => {
     stdin: {
       contents: `import { createElement, useState } from 'react';
         import { Form, Select, SelectTrigger, SelectValue, Combobox } from '@sardrobe/react-components';
-        import { installWebMCP } from 'webmcp-polyfill';
+        import { installWebMCP } from '@w3c/webmcp-polyfill';
         import { createRoot } from 'react-dom/client';
         import { WardrobeWorkspace } from './src/features/wardrobe/WardrobeWorkspace';
         import './src/styles/app.css';
@@ -79,7 +79,7 @@ beforeAll(async () => {
           useState(() => {
             document.modelContext.registerTool({ name: 'reset_component_form', description: 'Test-only native form reset.', inputSchema: { type: 'object', properties: {} }, execute: () => { document.querySelector('form').reset(); return { reset: true }; } });
           });
-          return createElement(Form, { toolname: 'shared_component_form', tooldescription: 'Test the existing Select and Combobox form behavior.', toolautosubmit: '',
+          return createElement(Form, { webMcpTool: { name: 'shared_component_form', description: 'Test the existing Select and Combobox form behavior.' },
             onSubmit: data => ({ color: data.getAll('color'), seasons: data.getAll('seasons') }),
           },
             createElement(Select, { name: 'color', formLabel: 'Color', items: colors, value: uncontrolled ? undefined : color, defaultValue: 'Blue', onValueChange: setColor },
@@ -170,7 +170,7 @@ test('upload and review panels remain side by side at desktop width', async () =
   expect(layout.editorLeft).toBeGreaterThanOrEqual(layout.galleryRight)
 })
 
-test('actual forms expose flat schemas under the original mutation names', async () => {
+test('imperative tools expose flat schemas under the original mutation names', async () => {
   await openItem()
   const schemas = await page.evaluate(async () => Object.fromEntries((await document.modelContext!.getTools()).map((tool) => [tool.name, tool.inputSchema])))
   expect(schemas.wardrobe_item_mutate).toMatchObject({ properties: {
@@ -179,7 +179,7 @@ test('actual forms expose flat schemas under the original mutation names', async
     subcategory: { enum: expect.arrayContaining(['Jacket']) }, season: { type: 'array' }, occasion: { type: 'array' }, confirm: { type: 'boolean' },
   } })
   expect(schemas.wardrobe_item_mutate).not.toHaveProperty('properties.fields')
-  expect(await page.locator('form[toolname="wardrobe_item_mutate"]').count()).toBe(1)
+  expect(await page.locator('form[toolname], form[toolautosubmit]').count()).toBe(0)
   expect(Object.keys(schemas).some((name) => name.includes('editor') || name === 'sardrobe_form_submit')).toBe(false)
   await openPlan()
   const packing = await page.evaluate(async () => (await document.modelContext!.getTools()).find((tool) => tool.name === 'packing_plan_mutate')!.inputSchema)
@@ -268,7 +268,7 @@ test('new-plan selection survives a delayed initial packing-list response', asyn
 
 
 for (const kind of ['item', 'packing'] as const) {
-  test(`${kind} declarative form keeps its schema stable during a save`, async () => {
+  test(`${kind} imperative tool keeps its schema stable during a save`, async () => {
     let release!: () => void
     let started = false
     const path = kind === 'item' ? '**/api/wardrobe/items/item-1' : '**/api/packing-plans/plan-1'
@@ -295,7 +295,7 @@ for (const kind of ['item', 'packing'] as const) {
   })
 }
 
-test('read tools select forms and declarative mutations save without UI input', async () => {
+test('read tools select forms and imperative mutations save without UI input', async () => {
   await page.route('**/api/wardrobe/items/item-1', (route) => {
     const body = route.request().method() === 'PATCH' ? route.request().postDataJSON() : {}
     return route.fulfill({ json: { item: { ...item, ...body } } })
@@ -306,9 +306,9 @@ test('read tools select forms and declarative mutations save without UI input', 
   })
   expect(await updateItem(page, { name: 'Renamed shirt' })).toMatchObject({ kind: 'wardrobe.item_updated', item: { name: 'Renamed shirt' } })
   expect(await updatePlan(page, { notes: 'Tools-only update' })).toMatchObject({ kind: 'packing.updated' })
-  expect(await page.locator('form[toolname="wardrobe_item_mutate"]').count()).toBe(0)
+  expect(await page.evaluate(async () => (await document.modelContext!.getTools()).some(tool => tool.name === 'wardrobe_item_mutate'))).toBe(false)
   expect(await updateItem(page, { notes: 'Back to wardrobe' })).toMatchObject({ kind: 'wardrobe.item_updated' })
-  expect(await page.locator('form[toolname="packing_plan_mutate"]').count()).toBe(0)
+  expect(await page.evaluate(async () => (await document.modelContext!.getTools()).some(tool => tool.name === 'packing_plan_mutate'))).toBe(false)
 })
 
 async function openDraftFixture(query = '') {
@@ -371,6 +371,10 @@ test('item form keeps deletion confirmation and returns deletion only after the 
     return route.fulfill({ json: { deleted: true } })
   })
   await openItem()
+  await expect(callTool(page, 'wardrobe_item_mutate', { action: 'delete', confirm: true, category: 'Invented' })).rejects.toThrow()
+  await expect(callTool(page, 'wardrobe_item_mutate', { action: 'delete' })).rejects.toThrow()
+  expect(deletions).toBe(0)
+  expect(await callTool(page, 'wardrobe_item_mutate', { notes: 'Retry with the default update action' })).toMatchObject({ kind: 'wardrobe.item_updated' })
   await expect(callTool(page, 'wardrobe_item_mutate', { action: 'delete', confirm: false })).rejects.toThrow()
   expect(deletions).toBe(0)
   expect(await callTool(page, 'wardrobe_item_mutate', { action: 'delete', confirm: true })).toEqual({ kind: 'wardrobe.item_deleted', itemId: item.id })

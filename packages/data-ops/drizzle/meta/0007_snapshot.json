@@ -19,7 +19,8 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": "'https://accounts.google.com'"
         },
         "account_id": {
           "name": "account_id",

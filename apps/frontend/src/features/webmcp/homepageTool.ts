@@ -1,4 +1,4 @@
-import { installWebMCP } from 'webmcp-polyfill'
+import { installWebMCP } from '@w3c/webmcp-polyfill'
 
 export const sardrobeOverview = {
   kind: 'sardrobe.site_overview',

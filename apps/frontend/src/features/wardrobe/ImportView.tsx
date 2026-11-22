@@ -255,13 +255,10 @@ export function ImportView(props: ImportViewProps) {
       </ClosetPanel>
 
       <Form
-        tooltitle="Change an import draft"
         onChange={() => setFormError(null)}
         key={selectedDraft?.id ?? 'empty'}
-        toolname={selectedDraft ? 'import_draft_mutate' : undefined}
         actions={['update', 'submit', 'discard']} defaultAction="submit" confirmActions={['submit', 'discard']} skipValidationActions={['discard']}
-        tooldescription={`Change import draft ${selectedDraft?.id ?? ''} in this browser tab. action "submit" (the Save button and default) saves its details and cutout to the wardrobe and requires confirm: true. action "update" edits only the local draft with no confirmation. action "discard" removes the draft from this tab and requires confirm: true. The draft must have a processed cutout before saving, and the wardrobe must have room. Failed saves can be retried with fresh confirmation. Only set fields you are changing; omitted fields keep their current values. Category, subcategory, color, occasion, and season must use the allowed values, and subcategory must belong to the chosen category. Pass [] to clear occasions or seasons and an empty string to clear optional text. Inspect import_draft_image before guessing visual attributes; do not invent values. Returns the edited draft ID and fields. The Save button saves its details and cutout to the wardrobe after the user agrees.`}
-        toolautosubmit=""
+        webMcpTool={selectedDraft ? { name: 'import_draft_mutate', title: 'Change an import draft', description: (`Change import draft ${selectedDraft?.id ?? ''} in this browser tab. action "submit" (the Save button and default) saves its details and cutout to the wardrobe and requires confirm: true. action "update" edits only the local draft with no confirmation. action "discard" removes the draft from this tab and requires confirm: true. The draft must have a processed cutout before saving, and the wardrobe must have room. Failed saves can be retried with fresh confirmation. Only set fields you are changing; omitted fields keep their current values. Category, subcategory, color, occasion, and season must use the allowed values, and subcategory must belong to the chosen category. Pass [] to clear occasions or seasons and an empty string to clear optional text. Inspect import_draft_image before guessing visual attributes; do not invent values. Returns the edited draft ID and fields. The Save button saves its details and cutout to the wardrobe after the user agrees.`) } : undefined}
         className={`closet-panel closet-details closet-draft-editor ${!selectedDraft ? 'closet-details--disabled' : ''}`}
         onSubmitError={reportFormError}
         onSubmit={(data, { action, fields }) => {

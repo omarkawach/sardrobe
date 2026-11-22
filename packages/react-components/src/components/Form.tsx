@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { useFormTool, type FormToolDefinition } from './formTool'
 
 const hiddenStyle: React.CSSProperties = { position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clipPath: 'inset(50%)', whiteSpace: 'nowrap', border: 0 }
 
@@ -42,16 +43,9 @@ export function formChangeDetails(event: Event) {
   return details
 }
 
-declare global {
-  interface SubmitEvent {
-    readonly agentInvoked: boolean
-    respondWith(response: Promise<unknown>): void
-  }
-}
-
 export type FormSubmission = { action: string; agentInvoked: boolean; submitter: HTMLElement | null; fields: ReadonlySet<string> }
 export type FormProps = Omit<React.ComponentPropsWithRef<'form'>, 'onSubmit'> & {
-  toolname?: string; tooltitle?: string; tooldescription?: string; toolautosubmit?: string
+  webMcpTool?: FormToolDefinition
   actions?: readonly string[]
   defaultAction?: string
   confirmActions?: readonly string[]
@@ -61,21 +55,20 @@ export type FormProps = Omit<React.ComponentPropsWithRef<'form'>, 'onSubmit'> & 
 }
 
 // Human and WebMCP submissions capture the same FormData and await the same operation.
-export function Form({ onSubmit, onSubmitError, actions, defaultAction = 'save', confirmActions = [], skipValidationActions = [], children, ...props }: FormProps) {
+export function Form({ onSubmit, onSubmitError, actions, defaultAction = 'save', confirmActions = [], skipValidationActions = [], children, ref, webMcpTool, ...props }: FormProps) {
   const pending = React.useRef(false)
-  return <form {...props} noValidate={props.noValidate ?? Boolean(actions)} onSubmit={(event) => {
-    event.preventDefault()
-    const native = event.nativeEvent
-    const data = new FormData(event.currentTarget)
-    const fields = new Set(Array.from(event.currentTarget.elements)
+  const formRef = React.useRef<HTMLFormElement>(null)
+  React.useImperativeHandle(ref, () => formRef.current!, [])
+  function submit(form: HTMLFormElement, agentInvoked: boolean, submitter: HTMLElement | null = null) {
+    const data = new FormData(form)
+    const fields = new Set(Array.from(form.elements)
       .filter((control) => !control.matches(':disabled'))
       .map((control) => control.getAttribute('name') ?? ''))
-    const agentInvoked = native.agentInvoked === true
-    const button = native.submitter as HTMLButtonElement | null
+    const button = submitter as HTMLButtonElement | null
     const action = agentInvoked ? String(data.get('action') ?? defaultAction) : button?.name === 'intent' ? button.value : defaultAction
-    const valid = skipValidationActions.includes(action) || event.currentTarget.checkValidity()
-    const actionControl = event.currentTarget.elements.namedItem('action') as HTMLSelectElement | null
-    const confirmation = event.currentTarget.elements.namedItem('confirm') as HTMLInputElement | null
+    const valid = skipValidationActions.includes(action) || form.checkValidity()
+    const actionControl = form.elements.namedItem('action') as HTMLSelectElement | null
+    const confirmation = form.elements.namedItem('confirm') as HTMLInputElement | null
     if (actionControl) actionControl.value = defaultAction
     if (confirmation) confirmation.checked = false
     const alreadyPending = pending.current
@@ -85,13 +78,17 @@ export function Form({ onSubmit, onSubmitError, actions, defaultAction = 'save',
       if (!valid) throw new Error('Check the required fields and their allowed values.')
       if (actions && !actions.includes(action)) throw new Error(`Choose an action from: ${actions.join(', ')}.`)
       if (agentInvoked && confirmActions.includes(action) && data.get('confirm') !== 'yes') throw new Error(`Set confirm: true to ${action}.`)
-      return onSubmit(data, { action, agentInvoked, submitter: native.submitter, fields })
+      return onSubmit(data, { action, agentInvoked, submitter, fields })
     }).catch((error: unknown) => {
       onSubmitError?.(error instanceof Error ? error.message : 'Could not submit this form.')
       throw error
     }).finally(() => { if (!alreadyPending) pending.current = false })
-    if (agentInvoked) native.respondWith(response)
-    else void response.catch(() => {})
+    return response
+  }
+  useFormTool(formRef, webMcpTool, () => submit(formRef.current!, true))
+  return <form {...props} ref={formRef} noValidate={props.noValidate ?? Boolean(actions)} onSubmit={(event) => {
+    event.preventDefault()
+    void submit(event.currentTarget, false, event.nativeEvent.submitter).catch(() => {})
   }}>
     {actions ? <FormSelect name="action" label="Operation to perform. Omit to use the Save button." defaultValue={defaultAction} options={actions.map((value) => ({ value, label: value }))} /> : null}
     {confirmActions.length ? <input style={hiddenStyle} aria-hidden="true" tabIndex={-1} type="checkbox" name="confirm" value="yes" aria-description={`Required true for: ${confirmActions.join(', ')}. Each attempt needs fresh confirmation.`} /> : null}

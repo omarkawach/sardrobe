@@ -136,7 +136,7 @@ const multiFields = [
   { key: 'occasion', label: 'Occasion', options: OCCASIONS },
 ] as const
 
-// Item and import editors share their UI controls and declarative input schema.
+// Item and import editors share their UI controls and imperative tool schema.
 export function WardrobeDetailsFields({ form, onChange }: {
   form: WardrobeFormState
   onChange: (key: keyof WardrobeFormState, value: string) => void

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { installWebMCP } from 'webmcp-polyfill'
+import { installWebMCP } from '@w3c/webmcp-polyfill'
 import { fetchWardrobeItem, fetchWardrobeItems } from '../wardrobe/api'
 import {
   OCCASIONS,

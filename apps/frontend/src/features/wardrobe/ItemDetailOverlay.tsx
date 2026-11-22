@@ -177,11 +177,8 @@ function ItemDetailBody({
       <Form
         key={selectedItem.id}
         id={`wardrobe-item-form-${selectedItem.id}`}
-        toolname={detailState === 'loading' ? undefined : 'wardrobe_item_mutate'}
         actions={['update', 'delete']} defaultAction="update" confirmActions={['delete']} skipValidationActions={['delete']}
-        tooldescription={`Change wardrobe item ${selectedItem.id}. action "update" (the default) saves its name and metadata directly with no confirmation. action "delete" permanently removes this item and its cutout and requires confirm: true. Only set fields you are changing; omitted fields keep their current values. Category, subcategory, color, occasion, and season must use the allowed values, and subcategory must belong to the chosen category. Pass [] to clear occasions or seasons and an empty string to clear optional text. Inspect wardrobe_item_image before guessing visual attributes; do not invent values. Returns the updated item.`}
-        tooltitle="Change a wardrobe item"
-        toolautosubmit=""
+        webMcpTool={detailState !== 'loading' ? { name: 'wardrobe_item_mutate', title: 'Change a wardrobe item', description: (`Change wardrobe item ${selectedItem.id}. action "update" (the default) saves its name and metadata directly with no confirmation. action "delete" permanently removes this item and its cutout and requires confirm: true. Only set fields you are changing; omitted fields keep their current values. Category, subcategory, color, occasion, and season must use the allowed values, and subcategory must belong to the chosen category. Pass [] to clear occasions or seasons and an empty string to clear optional text. Inspect wardrobe_item_image before guessing visual attributes; do not invent values. Returns the updated item.`) } : undefined}
         className="closet-dialog__form"
         onSubmitError={setDetailMessage}
         onSubmit={async (data, { action, fields }) => {

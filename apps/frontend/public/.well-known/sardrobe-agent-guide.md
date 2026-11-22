@@ -19,7 +19,7 @@ Sardrobe is a private digital wardrobe. Use its WebMCP tools in ChatGPT's in-app
 | Outfits | `outfits` | `outfit_image` | `outfit_mutate` |
 | Packing plans | `packing_plans` | — | `packing_plan_mutate` |
 
-Each read tool accepts `action: "list"` or `action: "get"` with the corresponding resource ID. Getting an item, draft, or packing plan also opens its form. Rediscover tools after getting a record: its declarative mutation tool is available while that form is open. For a new packing plan, call packing_plans with action: "new"; this opens an unsaved form and does not create a record.
+Each read tool accepts `action: "list"` or `action: "get"` with the corresponding resource ID. Getting an item, draft, or packing plan also opens its editor. Rediscover tools after getting a record: its imperative mutation tool is available while that editor is open. All tools register through document.modelContext.registerTool(); Sardrobe does not use declarative WebMCP forms. For a new packing plan, call packing_plans with action: "new"; this opens an unsaved editor and does not create a record.
 
 ## Safe workflow
 

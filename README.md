@@ -52,7 +52,7 @@ Optional AI functions run in supported desktop browsers. They do not use a hoste
 
 ## WebMCP
 
-Sardrobe registers site tools through the native `document.modelContext` API.
+Sardrobe registers every tool through the imperative `document.modelContext.registerTool()` API, typed with `webmcp-types`. The official `@w3c/webmcp-polyfill` supplies the API in secure browsers without native support and preserves existing native implementations. Sardrobe does not use the declarative WebMCP form API.
 
 Use one of these environments:
 
@@ -61,7 +61,7 @@ Use one of these environments:
 
 Restart Chrome after you enable the flag. Chrome without a compatible agent cannot call the tools.
 
-The tools use the same session and server authorization as the user interface. Sardrobe does not require an MCP relay, an extension, or a separate agent credential.
+The tools use the same session and server authorization as the user interface. Mutation tools register while their corresponding editor is open and share its validation, confirmation rules, and save handlers. Sardrobe does not require an MCP relay, an extension, or a separate agent credential. The polyfill supplies the page API; calling it from an agent still requires a compatible browser or agent integration.
 
 Read the [WebMCP agent guide](apps/frontend/public/.well-known/sardrobe-agent-guide.md) for the tool list and safe workflows.
 
@@ -86,8 +86,8 @@ Planning results are drafts. Review each outfit or packing plan before you save 
 
 ### Requirements
 
-- Node.js 22.12 or a later version
-- pnpm 10
+- Node.js 22.23.4 or a later version (see `.node-version`)
+- pnpm 12 (the exact version is pinned in `package.json`)
 - A Google OAuth web client
 
 ### Procedure
@@ -195,6 +195,16 @@ pnpm typecheck
 pnpm test
 pnpm build
 ```
+
+Test the complete WebMCP workflow with your own PNG, JPEG, or WebP images:
+
+```sh
+pnpm --filter @sardrobe/frontend test:e2e:webmcp /path/to/demo-images
+```
+
+This builds the app and runs Chromium with native WebMCP disabled, exercising the official polyfill against the production frontend build and real backend Worker. It uses fresh local D1 and R2 storage and a seeded local session, processes and saves the supplied images, checks wardrobe/outfit/packing tools and their returned images, and tests validation and confirmation. Original files stay unchanged. Public background-removal model files are read from Sardrobe; no live wardrobe data or Google credentials are used. Google OAuth itself is outside this test. Results and screenshots are written to `apps/frontend/test-results/webmcp` (override with `SARDROBE_E2E_OUTPUT_DIR`).
+
+Transformers.js stays pinned to 4.2.0 and ONNX Runtime Web to 1.29.0 because their newer WASM files exceed Cloudflare Workers' 25 MiB asset limit. Run `pnpm check:cloudflare` whenever changing these runtime versions.
 
 Run all checks:
 
