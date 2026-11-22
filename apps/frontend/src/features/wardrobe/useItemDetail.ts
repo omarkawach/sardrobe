@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { deleteWardrobeItem, fetchWardrobeItem, updateWardrobeItem } from './api'
 import {
   formFromItem,
@@ -17,6 +17,8 @@ export function useItemDetail({
   applyItemUpdate: (item: WardrobeItem) => void
   removeItem: (itemId: string) => void
 }) {
+  const selectionVersionRef = useRef(0)
+  const savingRef = useRef(false)
   const [selectedItem, setSelectedItem] = useState<WardrobeItem | null>(null)
   const [editForm, setEditForm] = useState<WardrobeFormState>(initialFormState)
   const [detailState, setDetailState] = useState<DetailState>('idle')
@@ -29,19 +31,12 @@ export function useItemDetail({
     setEditForm(formFromItem(item))
   }
 
-  function showAgentItemUpdate(item: WardrobeItem) {
+  function showItemEditor(item: WardrobeItem) {
+    selectionVersionRef.current += 1
     applySelectedItemUpdate(item)
     setDetailState('idle')
-    setDetailMessage('Updated by agent.')
+    setDetailMessage('')
     setConfirmingDelete(false)
-  }
-
-  function removeAgentDeletedItem(itemId: string) {
-    removeItem(itemId)
-
-    if (selectedItem?.id === itemId) {
-      closeItemDialog()
-    }
   }
 
   function updateEditForm(key: keyof WardrobeFormState, value: string) {
@@ -59,6 +54,7 @@ export function useItemDetail({
   }
 
   function closeItemDialog() {
+    selectionVersionRef.current += 1
     setSelectedItem(null)
     setDetailState('idle')
     setDetailMessage('')
@@ -66,6 +62,7 @@ export function useItemDetail({
   }
 
   async function openItem(item: WardrobeItem) {
+    const selectionVersion = ++selectionVersionRef.current
     setSelectedItem(item)
     setEditForm(formFromItem(item))
     setDetailState('loading')
@@ -74,48 +71,50 @@ export function useItemDetail({
 
     try {
       const nextItem = await fetchWardrobeItem(item.id)
+      if (selectionVersionRef.current !== selectionVersion) return
       applySelectedItemUpdate(nextItem)
       setDetailState('idle')
       setDetailMessage('')
     } catch (error) {
-      setDetailState('error')
-      setDetailMessage(error instanceof Error ? error.message : 'Could not load this item.')
+      if (selectionVersionRef.current === selectionVersion) {
+        setDetailState('error')
+        setDetailMessage(error instanceof Error ? error.message : 'Could not load this item.')
+      }
     }
   }
 
-  async function saveSelectedItem() {
-    if (!selectedItem) return
+  async function saveSelectedItem(submittedForm = editForm) {
+    if (!selectedItem || savingRef.current || detailState === 'loading' || detailState === 'deleting') return null
 
-    if (!editForm.name.trim() || !editForm.category.trim()) {
-      setDetailState('error')
-      setDetailMessage('Name and category are required.')
-      return
-    }
-
+    const selectionVersion = selectionVersionRef.current
+    savingRef.current = true
     setDetailState('saving')
     setDetailMessage('Saving changes...')
     setConfirmingDelete(false)
 
     try {
-      const item = await updateWardrobeItem(selectedItem.id, editForm)
+      const item = await updateWardrobeItem(selectedItem.id, submittedForm)
+      if (selectionVersionRef.current !== selectionVersion) {
+        applyItemUpdate(item)
+        return item
+      }
       applySelectedItemUpdate(item)
       setDetailState('idle')
       setDetailMessage('Saved.')
+      return item
     } catch (error) {
-      setDetailState('error')
-      setDetailMessage(error instanceof Error ? error.message : 'Could not save changes.')
+      if (selectionVersionRef.current === selectionVersion) {
+        setDetailState('error')
+        setDetailMessage(error instanceof Error ? error.message : 'Could not save changes.')
+      }
+      return null
+    } finally {
+      savingRef.current = false
     }
   }
 
   async function deleteSelectedItem() {
-    if (!selectedItem) return
-
-    if (!confirmingDelete) {
-      setConfirmingDelete(true)
-      setDetailState('idle')
-      setDetailMessage('Confirm delete.')
-      return
-    }
+    if (!selectedItem) return null
 
     setDetailState('deleting')
     setDetailMessage('Deleting item...')
@@ -124,9 +123,10 @@ export function useItemDetail({
       await deleteWardrobeItem(selectedItem.id)
       removeItem(selectedItem.id)
       closeItemDialog()
+      return selectedItem.id
     } catch (error) {
       setDetailState('error')
-      setDetailMessage(error instanceof Error ? error.message : 'Could not delete this item.')
+      throw error
     }
   }
 
@@ -141,14 +141,13 @@ export function useItemDetail({
     detailState,
     editForm,
     openItem,
-    removeAgentDeletedItem,
     saveSelectedItem,
     selectedCreatedDate,
     selectedItem,
     selectedUpdatedDate,
     setConfirmingDelete,
     setDetailMessage,
-    showAgentItemUpdate,
+    showItemEditor,
     updateEditForm,
   }
 }

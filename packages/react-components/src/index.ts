@@ -157,3 +157,6 @@ export type {
   TooltipPopupProps,
   TooltipArrowProps,
 } from './components/Tooltip'
+
+export { Form } from './components/Form'
+export type { FormProps, FormSubmission } from './components/Form'

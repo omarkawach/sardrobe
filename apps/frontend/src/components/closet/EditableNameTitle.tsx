@@ -16,10 +16,15 @@ type EditableNameTitleProps = {
   fallback: string
   label: string
   name: string
+  form?: string
   onChange: (value: string) => void
   renderTitle: (className: string, children: ReactNode, title: string) => ReactNode
   className?: string
   disabled?: boolean
+  pendingSubmit?: boolean
+  editing?: boolean
+  onEditingChange?: (editing: boolean) => void
+  onKeyDown?: (event: KeyboardEvent<HTMLInputElement>) => void
 }
 
 export function EditableNameTitle({
@@ -27,12 +32,19 @@ export function EditableNameTitle({
   fallback,
   label,
   name,
+  form,
   onChange,
   renderTitle,
   className = '',
   disabled = false,
+  pendingSubmit = false,
+  editing: controlledEditing,
+  onEditingChange,
+  onKeyDown,
 }: EditableNameTitleProps) {
-  const [editing, setEditing] = useState(false)
+  const [localEditing, setLocalEditing] = useState(false)
+  const editing = controlledEditing ?? localEditing
+  const setEditing = onEditingChange ?? setLocalEditing
   const inputRef = useRef<HTMLInputElement | null>(null)
   const initialValueRef = useRef(value)
   const displayTitle = value.trim() || fallback
@@ -73,58 +85,56 @@ export function EditableNameTitle({
     }
   }
 
-  if (editing) {
-    return (
-      <div className={['closet-editable-title', 'closet-editable-title--editing', className].filter(Boolean).join(' ')}>
-        {renderTitle('sr-only', displayTitle, displayTitle)}
-        <Field.Root className="closet-editable-title__field">
-          <Field.Label className="sr-only">{label}</Field.Label>
-          <Field.Control
-            ref={inputRef}
-            name={name}
-            className="closet-editable-title__input"
-            value={value}
-            onBlur={() => setEditing(false)}
-            onChange={(event) => onChange(event.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={disabled}
-            required
-            aria-required="true"
-          />
-        </Field.Root>
-      </div>
-    )
-  }
-
   return (
-    <div className={['closet-editable-title', className].filter(Boolean).join(' ')}>
-      {renderTitle('closet-editable-title__text', displayTitle, displayTitle)}
-      <Tooltip>
-        <TooltipTrigger
-          render={(
-            <Button
-              className="closet-editable-title__button"
-              size="icon"
-              variant="ghost"
-              color="neutral"
-              type="button"
-              aria-label={`Edit ${label.toLowerCase()}`}
-              disabled={disabled}
-              onClick={startEditing}
-            />
-          )}
-        >
-          <Pencil size={15} strokeWidth={1.4} aria-hidden="true" />
-        </TooltipTrigger>
-        <TooltipPortal>
-          <TooltipPositioner side="top" sideOffset={4}>
-            <TooltipPopup>
-              <TooltipArrow />
-              Edit {label.toLowerCase()}
-            </TooltipPopup>
-          </TooltipPositioner>
-        </TooltipPortal>
-      </Tooltip>
+    <div className={['closet-editable-title', editing && 'closet-editable-title--editing', className].filter(Boolean).join(' ')}>
+      {renderTitle(editing ? 'sr-only' : 'closet-editable-title__text', displayTitle, displayTitle)}
+      <Field.Root className={editing ? 'closet-editable-title__field' : 'sr-only'} aria-hidden={editing ? undefined : true} inert={pendingSubmit}>
+        <Field.Label className="sr-only">{label}</Field.Label>
+        <Field.Control
+          ref={inputRef}
+          name={name}
+          form={form}
+          className="closet-editable-title__input"
+          value={value}
+          tabIndex={editing ? undefined : -1}
+          onBlur={() => setEditing(false)}
+          onChange={(event) => onChange(event.target.value)}
+          onKeyDown={onKeyDown ?? handleKeyDown}
+          onInvalid={() => setEditing(true)}
+          // Native WebMCP cancels a running call if disabling a named control changes its schema.
+          disabled={disabled && !pendingSubmit}
+          required
+          aria-required="true"
+        />
+      </Field.Root>
+      {!editing ? (
+        <Tooltip>
+          <TooltipTrigger
+            render={(
+              <Button
+                className="closet-editable-title__button"
+                size="icon"
+                variant="ghost"
+                color="neutral"
+                type="button"
+                aria-label={`Edit ${label.toLowerCase()}`}
+                disabled={disabled}
+                onClick={startEditing}
+              />
+            )}
+          >
+            <Pencil size={15} strokeWidth={1.4} aria-hidden="true" />
+          </TooltipTrigger>
+          <TooltipPortal>
+            <TooltipPositioner side="top" sideOffset={4}>
+              <TooltipPopup>
+                <TooltipArrow />
+                Edit {label.toLowerCase()}
+              </TooltipPopup>
+            </TooltipPositioner>
+          </TooltipPortal>
+        </Tooltip>
+      ) : null}
     </div>
   )
 }

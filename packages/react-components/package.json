@@ -49,7 +49,8 @@
     "tsup": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "webmcp-types": "0.1.11"
   },
   "peerDependencies": {
     "react": "^19.0.0",

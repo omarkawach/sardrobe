@@ -7,7 +7,7 @@
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "skipLibCheck": true,
-    "types": ["@cloudflare/vitest-pool-workers/types", "vitest"]
+    "types": ["@cloudflare/vitest-plugin/types", "vitest"]
   },
   "include": ["src/**/*.ts", "tests/**/*.ts", "vitest.config.ts", "worker-configuration.d.ts"]
 }

@@ -25,21 +25,15 @@
     "storybook": "pnpm --filter @sardrobe/react-components storybook",
     "build-storybook": "pnpm --filter @sardrobe/react-components build-storybook"
   },
-  "pnpm": {
-    "overrides": {
-      "@cloudflare/workers-types": "4.20260702.1",
-      "@esbuild-kit/core-utils>esbuild": "0.25.12",
-      "@huggingface/transformers>sharp": "0.35.4",
-      "onnxruntime-node>adm-zip": "0.6.0",
-      "tsup>esbuild": "0.28.1"
-    }
-  },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "eslint": "^10.9.1",
-    "eslint-plugin-astro": "^3.1.0",
+    "eslint": "^10.15.0",
+    "eslint-plugin-astro": "^3.2.1",
     "eslint-plugin-react-hooks": "^7.1.1",
-    "globals": "^17.11.0",
-    "typescript-eslint": "^8.68.0"
+    "globals": "^17.14.0",
+    "typescript-eslint": "^8.73.0"
+  },
+  "engines": {
+    "node": ">=22.23.4"
   }
 }

@@ -49,7 +49,8 @@ export const account = sqliteTable(
   "account",
   {
     id: text("id").primaryKey(),
-    issuer: text("issuer").notNull(),
+    // Match the existing SQL default from migration 0006. Better Auth no longer writes issuer.
+    issuer: text("issuer").notNull().default("https://accounts.google.com"),
     accountId: text("account_id").notNull(),
     providerId: text("provider_id").notNull(),
     userId: text("user_id")

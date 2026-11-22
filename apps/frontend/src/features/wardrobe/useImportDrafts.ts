@@ -1,3 +1,4 @@
+import { validateWardrobeForm } from '../../components/closet/FormControls'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { persistWardrobeDraft } from './api'
 import {
@@ -121,6 +122,15 @@ export function useImportDrafts(refreshItems: () => Promise<void>) {
         return { ...draft, form: nextForm }
       }),
     )
+  }
+
+  function replaceDraftForm(draftId: string, form: WardrobeFormState) {
+    const draft = draftsRef.current.find((candidate) => candidate.id === draftId)
+    if (!draft || draft.status === 'saving') throw new Error('Draft is unavailable or already saving.')
+    validateWardrobeForm(form)
+    const updated = { ...draft, form }
+    updateDrafts((current) => current.map((candidate) => candidate.id === draftId ? updated : candidate))
+    return updated
   }
 
   function handleFilesSelected(fileList: FileList | null) {
@@ -419,18 +429,11 @@ export function useImportDrafts(refreshItems: () => Promise<void>) {
     setImportMessageTone(draft.status === 'failed' ? 'error' : 'ready')
   }
 
-  function revealAgentDraftList() {
-    setImportMobileView('gallery')
-    setImportMessage('Draft changed by agent.')
-    setImportMessageTone(draftsRef.current.some((draft) => draft.status === 'failed') ? 'error' : 'ready')
-  }
 
-  async function saveDraftById(draftId: string, options: { refresh?: boolean; quiet?: boolean } = {}) {
-    const draft = draftsRef.current.find((candidate) => candidate.id === draftId)
-
-    if (!draft) {
-      return null
-    }
+  async function saveDraftById(draftId: string, options: { refresh?: boolean; quiet?: boolean; form?: WardrobeFormState } = {}) {
+    const currentDraft = draftsRef.current.find((candidate) => candidate.id === draftId)
+    if (!currentDraft || currentDraft.status === 'saving') return null
+    const draft = options.form ? replaceDraftForm(draftId, options.form) : currentDraft
 
     if (!canSubmitDraft(draft)) {
       setSelectedDraftId(draftId)
@@ -470,6 +473,9 @@ export function useImportDrafts(refreshItems: () => Promise<void>) {
 
     try {
       const created = await persistWardrobeDraft({ cutout: draft.cutout!, form: draft.form })
+      // Keep the form mounted until the last awaited operation completes. Refresh
+      // failures must not make an already-persisted draft retryable.
+      if (options.refresh !== false) await refreshItems().catch(() => undefined)
       const latestDraft = draftsRef.current.find((candidate) => candidate.id === draftId)
 
       if (!latestDraft) {
@@ -488,10 +494,6 @@ export function useImportDrafts(refreshItems: () => Promise<void>) {
       if (!options.quiet) {
         setImportMessage(`${draft.form.name || draft.fileName} saved.`)
         setImportMessageTone('ready')
-      }
-
-      if (options.refresh !== false) {
-        await refreshItems()
       }
 
       return created.item
@@ -536,9 +538,9 @@ export function useImportDrafts(refreshItems: () => Promise<void>) {
     importProgressValue,
     importSummaryLabel,
     removeDraft,
-    revealAgentDraftList,
     revealAgentDraftUpdate,
     retryDraft,
+    replaceDraftForm,
     saveDraftById,
     selectedDraft,
     selectedDraftCanSubmit,
